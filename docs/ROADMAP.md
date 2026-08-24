@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 6
-- **Last completed milestone:** Milestone 5 — Strict AI Interface and Deterministic Mock Scorer
-- **Next proposed milestone:** Milestone 6 — Deterministic Policy Firewall and Stopping Rules
+- **Current milestone:** None — awaiting approval to begin Milestone 7
+- **Last completed milestone:** Milestone 6 — Deterministic Policy Firewall and Stopping Rules
+- **Next proposed milestone:** Milestone 7 — Tamper-Evident Audit Hash Chain
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -96,7 +96,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 6 — Deterministic Policy Firewall and Stopping Rules
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** No AI proposal becomes an action without passing deterministic financial safety rules.
 - **Dependencies:** Milestones 2, 4, and 5.
 - **Acceptance criteria:**

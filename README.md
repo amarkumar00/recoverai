@@ -2,7 +2,7 @@
 
 RecoverAI is a credential-free prototype for **Track 03 — AI Revenue Recovery** in the Razorpay AI Buildathon 2026. It explores how failed-payment events can become explainable, bounded recovery actions while measuring incremental **simulated** recovery across synthetic cases.
 
-> The current build contains a static product preview, durable local persistence, a deterministic recovery-case lifecycle, exact known-error diagnosis, and a passive deterministic recommendation scorer. It does not process webhooks, call Razorpay, execute policy rules, persist scoring results automatically, or create actual Payment Links. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
+> The current build contains a static product preview, durable local persistence, a deterministic recovery-case lifecycle, exact known-error diagnosis, a passive deterministic recommendation scorer, and a side-effect-free policy firewall. It does not process webhooks, call Razorpay, persist scoring or policy results automatically, mutate case state, contact customers, or create/cancel actual Payment Links. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
 
 ## Requirements
 
@@ -138,7 +138,31 @@ floor(verified unpaid subunits × probability millionths / 1,000,000)
 
 All monetary inputs and outputs are integer currency subunits. Multiplication and penalty aggregation use `bigint`; division rounds down to the nearest subunit, and results outside JavaScript's safe-integer range fail closed. Rankings use expected value descending, probability descending, total penalty ascending, then the canonical six-action order.
 
-Timeout, malformed output, provider failure, insufficient context, invalid candidate sets, and unsafe arithmetic return a schema-valid `ESCALATE_HUMAN` recommendation with sanitized evidence. The boundary performs no retry, action execution, case transition, repository write, policy approval, customer contact, or Razorpay call. Milestone 6's deterministic policy firewall remains the future final authority: **AI proposes; deterministic financial policy disposes.**
+Timeout, malformed output, provider failure, insufficient context, invalid candidate sets, and unsafe arithmetic return a schema-valid `ESCALATE_HUMAN` recommendation with sanitized evidence. The boundary performs no retry, action execution, case transition, repository write, customer contact, or Razorpay call. The deterministic policy firewall remains the final passive decision authority: **AI proposes; deterministic financial policy disposes.**
+
+## Deterministic policy firewall
+
+The pure firewall in `src/policy/` validates a strict internal action intent against trusted case, payment-satisfaction, diagnosis, AI-scoring, Payment Link, contact, recovery-window, and policy-configuration context. Unknown or malformed raw actions return a typed `INVALID_INPUT` result without fabricating an allowlisted action. Valid inputs produce one strict decision:
+
+- `APPROVED`: every rule passed and the final action exactly matches the proposed action.
+- `BLOCKED`: the plan is inconsistent or malformed; no final action is authorized.
+- `ESCALATED`: automation is stopped and the only final action is `ESCALATE_HUMAN`.
+- `STOPPED`: proactive recovery ends with `CANCEL_RECOVERY_ALREADY_PAID` or `STOP_NON_RETRYABLE`.
+
+Canonical defaults are:
+
+```text
+MAX_PAYMENT_LINKS_PER_ORDER = 1
+MAX_CUSTOMER_CONTACTS = 2
+MAX_RECOVERY_WINDOW_MILLISECONDS = 86,400,000 (24 hours)
+MIN_AI_CONFIDENCE_MILLIONTHS = 700,000 (0.70)
+```
+
+The exact 24-hour boundary is inclusive: an evaluation at `start + 86,400,000 ms` remains eligible, while one millisecond later is expired. Confidence is conservatively converted to millionths with floor rounding; exactly `0.70` passes and any value below it fails. These trusted defaults never come from provider output.
+
+Rule precedence is fixed: identity integrity → conflicting/partial payment state → verified success stopping → dependency availability → intent money integrity → Payment Link limits → contact limit → recovery window → AI boundary → expected value → diagnosis compatibility → approval. Earlier safety evidence overrides later AI ranking and economics. New-link amount/currency must exactly match verified unpaid money; one blocking link or the total-link limit prevents another link; partially paid or duplicate-payment states escalate; authorized/captured/order-paid state stops outreach and cancels only an eligible unpaid link. Non-positive expected value stops proactive recovery.
+
+Every decision contains ordered `PASSED`, `FAILED`, or `NOT_APPLICABLE` checks and one exact primary rule. Evaluation uses injected timestamps and performs no persistence, case transition, audit write, network request, Razorpay call, Payment Link operation, customer contact, retry, random operation, or ambient clock read. Future orchestration will persist and execute permitted decisions.
 
 ## Verification
 
@@ -183,7 +207,7 @@ The domain layer currently defines:
 - A deliberately separate Razorpay-style external payload boundary
 - Passive signature-verification and duplicate-processing result shapes
 
-The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. Webhook processing, payment fetching/reconciliation, AI scoring, policy execution, audit hashing, recovery execution, and evaluation calculations remain deferred to their approved milestones.
+The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer and policy firewall are implemented, while webhook processing, payment fetching/reconciliation, policy persistence, audit hashing, recovery execution, and evaluation calculations remain deferred to their approved milestones.
 
 ## Canonical project documents
 

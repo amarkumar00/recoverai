@@ -204,3 +204,24 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** Recommendation availability must never be converted into financial execution authority, leaked raw errors, or repeated side effects. One typed fail-closed path is easier to test and audit.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-25
+
+## ADR-030 — Policy evaluation uses one fixed safety-first precedence
+
+- **Decision:** Evaluate policy in this order: identity integrity, payment-state conflicts, verified-success stopping, dependency availability, intent money integrity, Payment Link limits, contact limits, recovery window, AI boundary, expected value, diagnosis compatibility, then approval. Emit every check in that deterministic order and identify one exact primary rule.
+- **Reason:** Paid, partial-paid, conflicting, or missing trusted state must override model ranking and economics. A total order makes decisions reproducible, audit-ready, and explainable without side effects.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-031 — Recovery window is inclusive and confidence conversion is conservative
+
+- **Decision:** Store the default 24-hour policy window as 86,400,000 milliseconds. Proactive recovery remains eligible exactly at the effective end timestamp and expires one millisecond later. Convert canonical AI confidence to integer millionths with floor rounding; 700,000 passes and anything below it fails.
+- **Reason:** Explicit units and boundary semantics remove time ambiguity. Conservative fixed-point conversion prevents a value slightly below the threshold from rounding up into approval.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-032 — Firewall outcomes carry execution-safe semantics
+
+- **Decision:** `APPROVED` preserves the proposed action, `BLOCKED` has no final action, `ESCALATED` finalizes only to `ESCALATE_HUMAN`, and `STOPPED` finalizes only to cancellation-after-success or non-retryable stop. Malformed raw input returns a separate typed invalid-input result without fabricating an action. Non-positive expected value stops proactive recovery.
+- **Reason:** Outcome-specific invariants prevent downstream orchestration from mistaking a rejection or escalation for executable authority while retaining exact audit-ready explanations.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25

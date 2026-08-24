@@ -157,7 +157,7 @@ export const validPolicyDecision = {
   reason: "The proposed action does not create a money movement.",
   checksPerformed: [
     {
-      ruleId: "PAYMENT_NOT_ALREADY_PAID",
+      ruleId: "DOWNTIME_WAIT_ALLOWED",
       status: "PASSED",
       reason: "The reconciled synthetic payment remains failed.",
     },
