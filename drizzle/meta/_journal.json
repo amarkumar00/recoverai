@@ -8,6 +8,13 @@
       "when": 1787587200000,
       "tag": "0000_durable_recoverai",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787673600000,
+      "tag": "0001_tamper_evident_audit_chain",
+      "breakpoints": true
     }
   ]
 }

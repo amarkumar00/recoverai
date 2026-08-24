@@ -2,7 +2,7 @@
 
 RecoverAI is a credential-free prototype for **Track 03 — AI Revenue Recovery** in the Razorpay AI Buildathon 2026. It explores how failed-payment events can become explainable, bounded recovery actions while measuring incremental **simulated** recovery across synthetic cases.
 
-> The current build contains a static product preview, durable local persistence, a deterministic recovery-case lifecycle, exact known-error diagnosis, a passive deterministic recommendation scorer, and a side-effect-free policy firewall. It does not process webhooks, call Razorpay, persist scoring or policy results automatically, mutate case state, contact customers, or create/cancel actual Payment Links. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
+> The current build contains a static product preview, durable local persistence, a deterministic recovery-case lifecycle, exact known-error diagnosis, a passive deterministic recommendation scorer, a side-effect-free policy firewall, and a tamper-evident audit hash chain. It does not process webhooks, call Razorpay, persist scoring or policy results automatically, mutate case state, contact customers, or create/cancel actual Payment Links. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
 
 ## Requirements
 
@@ -54,7 +54,7 @@ SQLite connections enforce foreign keys, use a five-second busy timeout, and ena
 
 ### Persistence boundaries
 
-The storage layer contains nine passive record families: webhook events, payment snapshots, recovery cases, AI recommendations, policy decisions, recovery actions, Payment Links, audit entries, and simulated evaluation runs. Repository interfaces live under `src/repositories/` and have no React, Next.js route, or UI dependency.
+The storage layer contains nine record families plus one audit-chain head anchor: webhook events, payment snapshots, recovery cases, AI recommendations, policy decisions, recovery actions, Payment Links, audit entries, simulated evaluation runs, and `audit_chain_state`. Repository interfaces live under `src/repositories/` and have no React, Next.js route, or UI dependency.
 
 Database rows intentionally use SQLite-friendly representations:
 
@@ -64,7 +64,15 @@ Database rows intentionally use SQLite-friendly representations:
 - Strict domain documents are serialized as JSON only where preserving the complete validated structure is useful.
 - Every serialized document is parsed and revalidated through the Milestone 2 Zod schema when read; corrupt data fails closed.
 
-This milestone stores audit hashes supplied by the validated contract but does not calculate or verify a hash chain. The UI must continue to call this an append-only audit log until Milestone 7 implements and verifies tamper evidence.
+## Tamper-evident audit chain
+
+`src/audit/` owns a real SHA-256 hash chain identified by `RECOVERAI_GLOBAL_AUDIT` at version `RECOVERAI_AUDIT_V1`. Callers submit only a strict passive append command; they cannot supply a sequence, predecessor hash, or current hash. The service validates a privacy-safe metadata allowlist, assigns the next insertion sequence, hashes canonical UTF-8 JSON, inserts the entry, and advances the local head anchor in one SQLite immediate transaction.
+
+The chain starts at sequence `1` with a null predecessor. Every later entry contains the prior digest. Verification revalidates stored schemas and metadata, recomputes every digest in sequence order, checks continuity and duplicate IDs, and compares the final entry with the stored count and head hash. An optional retained checkpoint can detect a database rewrite that no longer matches an earlier trusted head. Identical entry-ID replays are idempotent even after newer appends; content changes conflict, and a corrupt chain fails closed.
+
+The public passive repository exposes ordered reads only. Audit writes go through `createSqliteAuditChain`, so ordinary application callers cannot append pre-hashed records. Raw SQL access remains internal to this storage implementation.
+
+This is **tamper-evident**, not immutable storage. Editing, insertion, deletion, or reordering is detected while the local anchor remains trustworthy; deleting the final row is detected by the anchored count and head. An attacker able to rewrite every entry and the local anchor could construct a different locally valid chain. Retaining a checkpoint outside that database strengthens detection. Audit input intentionally excludes raw webhook payloads, prompts, stack traces, credentials, email addresses, phone numbers, and arbitrary metadata.
 
 ## Deterministic recovery lifecycle
 
@@ -207,7 +215,7 @@ The domain layer currently defines:
 - A deliberately separate Razorpay-style external payload boundary
 - Passive signature-verification and duplicate-processing result shapes
 
-The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer and policy firewall are implemented, while webhook processing, payment fetching/reconciliation, policy persistence, audit hashing, recovery execution, and evaluation calculations remain deferred to their approved milestones.
+The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer, policy firewall, and audit hash chain are implemented, while webhook processing, payment fetching/reconciliation, policy persistence, recovery execution, and evaluation calculations remain deferred to their approved milestones.
 
 ## Canonical project documents
 

@@ -404,6 +404,27 @@ export const auditEntries = sqliteTable(
   ],
 );
 
+export const auditChainState = sqliteTable(
+  "audit_chain_state",
+  {
+    chainIdentity: text("chain_identity").primaryKey(),
+    chainVersion: text("chain_version").notNull(),
+    entryCount: integer("entry_count", { mode: "number" }).notNull(),
+    lastSequence: integer("last_sequence", { mode: "number" }).notNull(),
+    headHash: text("head_hash"),
+  },
+  (table) => [
+    check(
+      "audit_chain_state_count_check",
+      sql`typeof(${table.entryCount}) = 'integer' AND ${table.entryCount} >= 0 AND typeof(${table.lastSequence}) = 'integer' AND ${table.lastSequence} = ${table.entryCount}`,
+    ),
+    check(
+      "audit_chain_state_head_check",
+      sql`(${table.entryCount} = 0 AND ${table.headHash} IS NULL) OR (${table.entryCount} > 0 AND length(${table.headHash}) = 64 AND ${table.headHash} NOT GLOB '*[^0-9a-f]*')`,
+    ),
+  ],
+);
+
 export const evaluationRuns = sqliteTable(
   "evaluation_runs",
   {
@@ -469,5 +490,6 @@ export const recoverAiSchema = {
   recoveryActions,
   paymentLinks,
   auditEntries,
+  auditChainState,
   evaluationRuns,
 };

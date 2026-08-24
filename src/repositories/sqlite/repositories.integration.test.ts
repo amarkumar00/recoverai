@@ -4,13 +4,12 @@ import { join } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
+import { createSqliteAuditChain } from "@/audit";
 import {
-  auditEntrySchema,
   normalizedPaymentEventSchema,
   simulatedEvaluationResultSchema,
 } from "@/domain";
 import {
-  auditHash,
   canonicalTime,
   syntheticCustomerHash,
   validAiRecommendation,
@@ -139,6 +138,20 @@ function makeLink(overrides: Record<string, unknown> = {}) {
   });
 }
 
+function toAuditCommand(entry: typeof validAuditEntry) {
+  return {
+    entryId: entry.entryId,
+    timestamp: entry.timestamp,
+    actor: entry.actor,
+    inputReference: entry.inputReference,
+    eventType: entry.eventType,
+    reason: entry.reason,
+    previousState: entry.previousState,
+    newState: entry.newState,
+    metadata: entry.metadata,
+  };
+}
+
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
     rmSync(directory, { recursive: true, force: true });
@@ -194,9 +207,13 @@ describe("SQLite repositories", () => {
         paymentLink: link,
       });
 
-      const audit = auditEntrySchema.parse(validAuditEntry);
-      expect(repositories.auditEntries.append(audit)).toEqual(audit);
-      expect(repositories.auditEntries.readOrdered()).toEqual([audit]);
+      const auditChain = createSqliteAuditChain(database);
+      const auditCommand = toAuditCommand(validAuditEntry);
+      const auditResult = auditChain.append(auditCommand);
+      expect(auditResult.status).toBe("APPENDED");
+      expect(repositories.auditEntries.readOrdered()).toEqual(
+        auditResult.status === "APPENDED" ? [auditResult.entry] : [],
+      );
 
       const evaluation = evaluationRunRecordSchema.parse({
         result: validSimulatedEvaluation,
@@ -532,22 +549,23 @@ describe("SQLite repositories", () => {
     const repositories = createSqliteRepositories(database);
 
     try {
-      const laterAudit = auditEntrySchema.parse({
-        ...validAuditEntry,
-        entryId: "audit_demo_002",
-        timestamp: laterTime,
-        previousHash: auditHash,
-        currentHash: "d".repeat(64),
-      });
-      const earlierAudit = auditEntrySchema.parse(validAuditEntry);
-      repositories.auditEntries.append(laterAudit);
-      repositories.auditEntries.append(earlierAudit);
+      const auditChain = createSqliteAuditChain(database);
+      const baseCommand = toAuditCommand(validAuditEntry);
+      expect(
+        auditChain.append({
+          ...baseCommand,
+          entryId: "audit_demo_002",
+          timestamp: laterTime,
+        }).status,
+      ).toBe("APPENDED");
+      expect(
+        auditChain.append({ ...baseCommand, entryId: "audit_demo_001" }).status,
+      ).toBe("APPENDED");
 
       expect(
         repositories.auditEntries.readOrdered().map(({ entryId }) => entryId),
-      ).toEqual(["audit_demo_001", "audit_demo_002"]);
+      ).toEqual(["audit_demo_002", "audit_demo_001"]);
       expect(Object.keys(repositories.auditEntries).sort()).toEqual([
-        "append",
         "readOrdered",
       ]);
     } finally {

@@ -18,6 +18,7 @@ const REQUIRED_TABLES = [
   "recovery_actions",
   "payment_links",
   "audit_entries",
+  "audit_chain_state",
   "evaluation_runs",
 ] as const;
 
@@ -68,7 +69,7 @@ describe("committed database migrations", () => {
       const migrationCount = database.client
         .prepare("SELECT count(*) AS count FROM __drizzle_migrations")
         .get() as { count: number };
-      expect(migrationCount.count).toBe(1);
+      expect(migrationCount.count).toBe(2);
     } finally {
       database.client.close();
     }

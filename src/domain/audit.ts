@@ -59,6 +59,7 @@ export const sanitizedAuditMetadataSchema = z
 
 export const auditEntrySchema = z
   .object({
+    sequence: z.number().int().positive().safe(),
     entryId: auditEntryIdSchema,
     timestamp: canonicalTimestampSchema,
     actor: auditActorSchema,

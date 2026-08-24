@@ -1,9 +1,9 @@
 import { and, asc, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
+import { createSqliteAuditChain } from "@/audit";
 import {
   aiRecommendationSchema,
-  auditEntrySchema,
   eventIdSchema,
   failureContextSchema,
   normalizedPaymentEventSchema,
@@ -14,7 +14,6 @@ import {
 import type { LocalDatabase } from "@/lib/db/client";
 import {
   aiRecommendations,
-  auditEntries,
   evaluationRuns,
   paymentLinks,
   paymentSnapshots,
@@ -204,6 +203,7 @@ function toPaymentLink(
 
 function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
   const { db } = database;
+  const auditChain = createSqliteAuditChain(database);
 
   const webhookEventRepository = {
     claim(rawInput: WebhookEventClaim): WebhookClaimResult {
@@ -596,51 +596,8 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
   };
 
   const auditEntryRepository: AuditEntryRepository = {
-    append(rawInput) {
-      const input = auditEntrySchema.parse(rawInput);
-      db.insert(auditEntries)
-        .values({
-          entryId: input.entryId,
-          timestamp: input.timestamp,
-          actor: input.actor,
-          inputReference: input.inputReference,
-          eventType: input.eventType,
-          reason: input.reason,
-          previousState: input.previousState,
-          newState: input.newState,
-          previousHash: input.previousHash,
-          currentHash: input.currentHash,
-          metadataJson: JSON.stringify(input.metadata),
-        })
-        .run();
-      return input;
-    },
-
     readOrdered() {
-      return db
-        .select()
-        .from(auditEntries)
-        .orderBy(asc(auditEntries.timestamp), asc(auditEntries.sequence))
-        .all()
-        .map((row) =>
-          auditEntrySchema.parse({
-            entryId: row.entryId,
-            timestamp: row.timestamp,
-            actor: row.actor,
-            inputReference: row.inputReference,
-            eventType: row.eventType,
-            reason: row.reason,
-            previousState: row.previousState,
-            newState: row.newState,
-            previousHash: row.previousHash,
-            currentHash: row.currentHash,
-            metadata: parseStoredJson(
-              row.metadataJson,
-              auditEntrySchema.shape.metadata,
-              "audit metadata JSON",
-            ),
-          }),
-        );
+      return auditChain.readOrdered();
     },
   };
 

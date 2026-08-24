@@ -167,6 +167,7 @@ export const validPolicyDecision = {
 };
 
 export const validAuditEntry = {
+  sequence: 1,
   entryId: "audit_demo_001",
   timestamp: canonicalTime,
   actor: "POLICY_FIREWALL",

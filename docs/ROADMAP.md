@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 7
-- **Last completed milestone:** Milestone 6 — Deterministic Policy Firewall and Stopping Rules
-- **Next proposed milestone:** Milestone 7 — Tamper-Evident Audit Hash Chain
+- **Current milestone:** None — awaiting approval to begin Milestone 8
+- **Last completed milestone:** Milestone 7 — Tamper-Evident Audit Hash Chain
+- **Next proposed milestone:** Milestone 8 — Mock Razorpay Adapter and Idempotent Recovery Execution
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -108,7 +108,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 7 — Tamper-Evident Audit Hash Chain
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** Material events and decisions are traceable and tampering can be detected.
 - **Dependencies:** Milestones 2–3.
 - **Acceptance criteria:**

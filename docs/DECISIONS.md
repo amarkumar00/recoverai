@@ -225,3 +225,31 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** Outcome-specific invariants prevent downstream orchestration from mistaking a rejection or escalation for executable authority while retaining exact audit-ready explanations.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-25
+
+## ADR-033 — Audit hashes use one versioned canonical preimage
+
+- **Decision:** Hash `RECOVERAI_AUDIT_V1` entries with SHA-256 over canonical UTF-8 JSON containing the global chain identity, version, insertion sequence, entry ID, timestamp, actor, operational input reference, event type, safe reason, state transition, predecessor hash, and strictly allowlisted metadata. Recursively sort object keys, preserve array order, normalize negative zero, and reject undefined, sparse, non-finite, bigint, and non-plain values. Exclude the current hash from its own preimage.
+- **Reason:** A fully specified preimage makes identical input reproducible across calls and ensures every material stored field is integrity-bound without relying on object insertion order, locale, or ambient time.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-034 — Audit append owns sequence and hashes inside one immediate transaction
+
+- **Decision:** Accept only a passive validated append command. Verify the existing chain, assign `count + 1`, calculate the predecessor and current hash internally, insert the entry, and atomically advance the chain head in one SQLite immediate transaction. Identical entry-ID replay returns the stored entry without changing the head; changed content conflicts; detected corruption blocks append. The ordinary repository exposes audit reads but no pre-hashed append method.
+- **Reason:** Caller-supplied chain fields and split entry/head writes would allow malformed chains, races, or partially committed integrity state. Transactional ownership makes appends deterministic and fail closed.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-035 — Local head anchoring detects truncation but is not immutability
+
+- **Decision:** Persist one global chain-state row containing identity, version, entry count, last sequence, and head hash. Verify every entry plus the anchor, and optionally compare an externally retained checkpoint. Describe the result as tamper-evident, never immutable.
+- **Reason:** Linking entries alone cannot detect deletion of the final row. The anchored head detects local truncation, while an independently retained checkpoint also helps detect wholesale entry-and-anchor replacement. A database administrator able to rewrite both remains outside the local guarantee.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-036 — Audit storage accepts only privacy-minimized operational evidence
+
+- **Decision:** Allow only enumerated operational metadata and bounded identifiers/reasons. Reject arbitrary keys plus email, phone, Razorpay credential, bearer token, secret-label, raw-payload, prompt, and stack-trace patterns before append; revalidate stored metadata and complete stored entry content during verification and reads.
+- **Reason:** Integrity hashing must not turn secrets, PII, raw provider payloads, or model internals into durable copied data. Audit evidence should explain decisions using safe references and codes.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25

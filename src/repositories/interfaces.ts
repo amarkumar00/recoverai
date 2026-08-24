@@ -88,7 +88,6 @@ export interface PaymentLinkRepository {
 }
 
 export interface AuditEntryRepository {
-  append(input: AuditEntry): AuditEntry;
   readOrdered(): AuditEntry[];
 }
 
