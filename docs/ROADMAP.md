@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 3
-- **Last completed milestone:** Milestone 2 — Core Domain Types and Validated Schemas
-- **Next proposed milestone:** Milestone 3 — Database Design, Migrations and Repositories
+- **Current milestone:** None — awaiting approval to begin Milestone 4
+- **Last completed milestone:** Milestone 3 — Database Design, Migrations and Repositories
+- **Next proposed milestone:** Milestone 4 — Recovery-Case State Machine and Known-Error Diagnosis
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -57,7 +57,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 3 — Database Design, Migrations and Repositories
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** SQLite-compatible durable storage with migrations, repositories, and financial safety constraints.
 - **Dependencies:** Milestones 1–2.
 - **Acceptance criteria:**

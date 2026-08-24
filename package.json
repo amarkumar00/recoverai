@@ -11,9 +11,11 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "db:check": "vitest run src/lib/db/migration-consistency.test.ts",
+    "db:migrate": "node scripts/migrate-db.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run lint && npm run typecheck && npm run test && npm run build"
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run db:check && npm run test && npm run build"
   },
   "dependencies": {
     "better-sqlite3": "13.0.3",

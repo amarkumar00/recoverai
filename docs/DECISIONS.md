@@ -127,3 +127,38 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** A generic metadata bag could casually collect secrets, raw provider payloads, customer contact details, or other PII.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-24
+
+## ADR-019 — Committed migrations are the only schema-creation path
+
+- **Decision:** Create database tables through reviewed SQL migrations applied by Drizzle's programmatic migrator; application startup must not push or synthesize schema.
+- **Reason:** A clean database must be reproducible and schema changes must remain reviewable, deterministic, and independent of the developer database.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-020 — Financial invariants are enforced at both repository and SQLite boundaries
+
+- **Decision:** Use narrow Zod-validated repositories plus SQLite foreign keys, checks, unique constraints, and a partial unique index for idempotency and one-blocking-link-per-order rules.
+- **Reason:** Application validation alone cannot safely arbitrate competing writes or prevent invalid direct persistence.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-021 — Structured persistence is validated on every read
+
+- **Decision:** Store complete AI, policy, webhook, audit-metadata, and simulated-evaluation documents as serialized JSON only where justified, and parse them through the canonical domain schema on retrieval. Store query-critical fields separately as constrained columns; represent AI confidence as integer millionths and booleans as constrained SQLite integers.
+- **Reason:** SQLite-friendly rows support indexing and constraints, while canonical JSON preserves strict domain structure. Revalidation prevents corrupt or manually altered JSON from becoming trusted internal data.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-022 — File databases use WAL and a bounded busy timeout
+
+- **Decision:** Enable SQLite WAL journal mode for file databases and set a five-second busy timeout on every connection while preserving `foreign_keys = ON`.
+- **Reason:** RecoverAI will need safe competing idempotency claims; WAL and a bounded wait reduce avoidable lock failures without hiding prolonged contention.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-023 — Audit persistence is append-only but not yet tamper-evident
+
+- **Decision:** Expose only append and deterministic ordered-read operations for audit entries during Milestone 3. Persist validated hash fields without calculating or verifying a chain.
+- **Reason:** Hash generation and tamper verification belong to Milestone 7, so current product wording must not overclaim tamper evidence.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
