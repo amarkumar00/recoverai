@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 5
-- **Last completed milestone:** Milestone 4 — Recovery-Case State Machine and Known-Error Diagnosis
-- **Next proposed milestone:** Milestone 5 — Strict AI Interface and Deterministic Mock Scorer
+- **Current milestone:** None — awaiting approval to begin Milestone 6
+- **Last completed milestone:** Milestone 5 — Strict AI Interface and Deterministic Mock Scorer
+- **Next proposed milestone:** Milestone 6 — Deterministic Policy Firewall and Stopping Rules
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -83,7 +83,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 5 — Strict AI Interface and Deterministic Mock Scorer
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** A provider-independent AI boundary with a credential-free, repeatable mock scorer.
 - **Dependencies:** Milestones 2 and 4.
 - **Acceptance criteria:**

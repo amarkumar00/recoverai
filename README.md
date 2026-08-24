@@ -2,7 +2,7 @@
 
 RecoverAI is a credential-free prototype for **Track 03 — AI Revenue Recovery** in the Razorpay AI Buildathon 2026. It explores how failed-payment events can become explainable, bounded recovery actions while measuring incremental **simulated** recovery across synthetic cases.
 
-> The current build contains a static product preview, durable local persistence, a deterministic recovery-case lifecycle, and exact known-error diagnosis. It does not process webhooks, call Razorpay, run an AI scorer, execute policy rules, or create actual Payment Links. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
+> The current build contains a static product preview, durable local persistence, a deterministic recovery-case lifecycle, exact known-error diagnosis, and a passive deterministic recommendation scorer. It does not process webhooks, call Razorpay, execute policy rules, persist scoring results automatically, or create actual Payment Links. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
 
 ## Requirements
 
@@ -98,6 +98,47 @@ The known-error mapper in `src/diagnosis/` uses this fixed precedence:
 Mappings use exact identifiers from Razorpay's [error structure](https://razorpay.com/docs/errors/) and [payment error list](https://razorpay.com/docs/errors/payments/list/). Free-form descriptions and fuzzy substring matching are never used. Unknown, conflicting, and unavailable input escalates instead of being guessed as recoverable.
 
 Diagnosis returns only the seven canonical failure classes and deterministic candidate actions from the six-action allowlist. Candidate order exists only for reproducibility; it is not AI ranking or execution authority. Existing recovery-link context removes a second `SEND_PAYMENT_LINK` candidate. Diagnostic evidence uses fixed sanitized messages and never copies free-form descriptions or customer contact information.
+
+## Bounded deterministic recommendation scorer
+
+The provider-independent recommendation boundary lives in `src/ai/`. It receives validated payment context and deterministic diagnosis candidates, but the provider-visible input deliberately excludes authoritative amount, currency, customer hash, payment/order/link identifiers, API routes, idempotency keys, recipients, policy authority, and hidden Digital Twin outcomes. Provider output is treated as `unknown` until a strict schema accepts it.
+
+The default `DeterministicMockAiProvider` is a credential-free seeded demo/test double with transparent handcrafted estimates. It is **not a trained production model** and its output is not evidence of real payment uplift. Its conservative base behaviour is:
+
+- Temporary downtime usually gives `WAIT_FOR_RECOVERY` the highest estimate.
+- Insufficient funds usually favours `REQUEST_METHOD_CHANGE` over a new link.
+- Customer-correctable context generally favours a bounded link or method change.
+- Network uncertainty keeps recovery estimates conservative.
+- Late success and non-retryable diagnoses contain only their deterministic cancel/stop candidate; those non-recovery actions receive zero recovery probability.
+- Ambiguous or unavailable context bypasses scoring and escalates safely.
+
+Relevant base recovery-probability estimates, before bounded seed variation, are:
+
+| Diagnosed class                 | Candidate base estimates                                 |
+| ------------------------------- | -------------------------------------------------------- |
+| Downtime/transient              | wait 78%, human escalation 8%                            |
+| Insufficient funds              | method change 56%, bounded link 42%, human escalation 8% |
+| Customer-correctable            | bounded link 64%, method change 57%, human escalation 8% |
+| Network/integration uncertainty | wait 40%, human escalation 18%                           |
+| Late success                    | cancel existing recovery 0% recovery probability         |
+| Non-retryable                   | stop recovery 0% recovery probability                    |
+| Ambiguous/unavailable           | provider bypass; human escalation fallback               |
+
+Any seeded probability variation is reproducible and bounded to ±10,000 millionths. The same normalized input and seed produce the same logical provider output; the mock uses no current time, randomness source, network call, or environment credential.
+
+Expected value is calculated only by trusted application code:
+
+```text
+floor(verified unpaid subunits × probability millionths / 1,000,000)
+− contact cost
+− friction penalty
+− duplicate-payment-risk penalty
+− operational cost
+```
+
+All monetary inputs and outputs are integer currency subunits. Multiplication and penalty aggregation use `bigint`; division rounds down to the nearest subunit, and results outside JavaScript's safe-integer range fail closed. Rankings use expected value descending, probability descending, total penalty ascending, then the canonical six-action order.
+
+Timeout, malformed output, provider failure, insufficient context, invalid candidate sets, and unsafe arithmetic return a schema-valid `ESCALATE_HUMAN` recommendation with sanitized evidence. The boundary performs no retry, action execution, case transition, repository write, policy approval, customer contact, or Razorpay call. Milestone 6's deterministic policy firewall remains the future final authority: **AI proposes; deterministic financial policy disposes.**
 
 ## Verification
 

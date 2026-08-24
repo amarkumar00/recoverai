@@ -183,3 +183,24 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** Deterministic exact matching is reproducible and explainable, while conservative ambiguity avoids unsupported recovery actions and accidental leakage of free-form customer information.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-25
+
+## ADR-027 — Provider output estimates probability but never controls money
+
+- **Decision:** Give recommendation providers a strict non-executable context without amount, currency, customer hash, payment/order/link identifiers, routes, recipients, idempotency keys, policy authority, or hidden Digital Twin outcomes. Providers return untrusted probability estimates and bounded explanations only; trusted code validates the complete candidate set and constructs the canonical recommendation.
+- **Reason:** A model can help rank deterministic diagnosis candidates without gaining control over financial facts or executable operations.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-028 — Expected value uses fixed-point millionths and checked integer arithmetic
+
+- **Decision:** Represent recovery probability as integer millionths at the provider and scoring boundary. Calculate expected recovered subunits with `bigint`, divide by 1,000,000 with floor rounding, subtract trusted integer-subunit penalties, and reject results outside the JavaScript safe-integer range. Rank by expected value descending, probability descending, total penalty ascending, then canonical action order.
+- **Reason:** Fixed-point probability and checked integer money arithmetic make scoring reproducible and prevent floating-point or overflow ambiguity. A documented total tie-break makes ordering stable.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-029 — Recommendation failures produce one canonical safe fallback
+
+- **Decision:** A provider timeout, malformed output, provider error, insufficient context, invalid candidate set, or unsafe arithmetic returns a sanitized schema-valid `ESCALATE_HUMAN` recommendation. Timeout aborts the wait, performs no retry, and never reuses partially validated output. A diagnosis containing only human escalation bypasses the provider.
+- **Reason:** Recommendation availability must never be converted into financial execution authority, leaked raw errors, or repeated side effects. One typed fail-closed path is easier to test and audit.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
