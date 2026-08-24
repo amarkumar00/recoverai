@@ -162,3 +162,24 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** Hash generation and tamper verification belong to Milestone 7, so current product wording must not overclaim tamper evidence.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-25
+
+## ADR-024 — Explicit transitions with safety-aware same-state no-ops
+
+- **Decision:** Keep one explicit transition map in the pure recovery state machine. The six pre-terminal states are active; `RECOVERED`, `STOPPED`, `ESCALATED`, and `ERROR_SAFE` are terminal. A safe same-state request is an idempotent no-op and never increments the version, while incompatible payment context remains a rejection.
+- **Reason:** Explicit edges prevent arbitrary backward movement, and safety-aware no-ops make retries deterministic without allowing a repeated request to conceal paid, unavailable, or conflicting context.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-025 — Trusted payment satisfaction gates lifecycle activation and recovery
+
+- **Decision:** Represent payment satisfaction as a strict four-way context: verified satisfied, verified unpaid, unavailable, or conflicting. Authorization, capture, and order-paid are satisfaction bases. Active recovery requires verified unpaid context, and `RECOVERED` requires verified satisfaction.
+- **Reason:** A normalized webhook snapshot alone cannot safely establish current payment or order state, especially after late authorization or out-of-order events.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-026 — Known-error diagnosis is exact and conservatively prioritized
+
+- **Decision:** Diagnose known failures with an explicit priority order and exact documented `error_reason` matches. Never inspect free-form descriptions or use fuzzy matching. Verified success wins first; conflicting or unavailable payment context fails closed; compatible downtime precedes exact error mapping; remaining unknowns escalate.
+- **Reason:** Deterministic exact matching is reproducible and explainable, while conservative ambiguity avoids unsupported recovery actions and accidental leakage of free-form customer information.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25

@@ -2,7 +2,7 @@
 
 RecoverAI is a credential-free prototype for **Track 03 — AI Revenue Recovery** in the Razorpay AI Buildathon 2026. It explores how failed-payment events can become explainable, bounded recovery actions while measuring incremental **simulated** recovery across synthetic cases.
 
-> The current build contains a static product preview, passive domain contracts, and a durable local persistence layer. It does not process webhooks, call Razorpay, run an AI scorer, execute policy rules, or create actual Payment Links. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
+> The current build contains a static product preview, durable local persistence, a deterministic recovery-case lifecycle, and exact known-error diagnosis. It does not process webhooks, call Razorpay, run an AI scorer, execute policy rules, or create actual Payment Links. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
 
 ## Requirements
 
@@ -66,6 +66,39 @@ Database rows intentionally use SQLite-friendly representations:
 
 This milestone stores audit hashes supplied by the validated contract but does not calculate or verify a hash chain. The UI must continue to call this an append-only audit log until Milestone 7 implements and verifies tamper evidence.
 
+## Deterministic recovery lifecycle
+
+The pure state machine in `src/recovery/state-machine.ts` owns transition legality; repositories remain storage-only. The active states are `DETECTED`, `VERIFYING`, `DIAGNOSED`, `AWAITING_POLICY`, `WAITING`, and `LINK_CREATED`. The MVP terminal states are `RECOVERED`, `STOPPED`, `ESCALATED`, and `ERROR_SAFE`.
+
+The primary workflow is:
+
+```text
+DETECTED → VERIFYING → DIAGNOSED → AWAITING_POLICY
+                                      ├─→ WAITING
+                                      └─→ LINK_CREATED
+```
+
+Every active state has explicit safe exits to the applicable terminal states. `WAITING → VERIFYING` is the only intentional re-verification loop. No terminal state can reactivate recovery.
+
+Same-state requests are explicit idempotent no-ops when their trusted payment context is safe. They do not increment the case version. A paid, unavailable, or conflicting context cannot use a no-op to conceal an unsafe active-recovery request.
+
+Transitions require a trusted payment-satisfaction result. Verified authorization, capture, or order-paid evidence permits only a recovered/stopped path. Entering an active state requires a verified unpaid result, and marking a case recovered requires verified satisfaction. The persistence service performs one version-aware update and returns typed not-found, stale-version, lost-race, and domain-rejection outcomes without mutating rejected cases.
+
+## Deterministic known-error diagnosis
+
+The known-error mapper in `src/diagnosis/` uses this fixed precedence:
+
+1. Verified authorization, capture, or order-paid state
+2. Unavailable or conflicting trusted payment state
+3. Compatible verified active downtime
+4. Exact documented structured `error_reason` rules
+5. Unavailable downtime context
+6. Conservative ambiguity
+
+Mappings use exact identifiers from Razorpay's [error structure](https://razorpay.com/docs/errors/) and [payment error list](https://razorpay.com/docs/errors/payments/list/). Free-form descriptions and fuzzy substring matching are never used. Unknown, conflicting, and unavailable input escalates instead of being guessed as recoverable.
+
+Diagnosis returns only the seven canonical failure classes and deterministic candidate actions from the six-action allowlist. Candidate order exists only for reproducibility; it is not AI ranking or execution authority. Existing recovery-link context removes a second `SEND_PAYMENT_LINK` candidate. Diagnostic evidence uses fixed sanitized messages and never copies free-form descriptions or customer contact information.
+
 ## Verification
 
 Run each check independently:
@@ -109,7 +142,7 @@ The domain layer currently defines:
 - A deliberately separate Razorpay-style external payload boundary
 - Passive signature-verification and duplicate-processing result shapes
 
-The domain contracts remain passive. Persistence now stores and revalidates them, but state transitions, webhook processing, AI scoring, policy execution, audit hashing, and evaluation calculations remain deferred to their approved milestones.
+The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. Webhook processing, payment fetching/reconciliation, AI scoring, policy execution, audit hashing, recovery execution, and evaluation calculations remain deferred to their approved milestones.
 
 ## Canonical project documents
 

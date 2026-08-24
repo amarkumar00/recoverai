@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 4
-- **Last completed milestone:** Milestone 3 — Database Design, Migrations and Repositories
-- **Next proposed milestone:** Milestone 4 — Recovery-Case State Machine and Known-Error Diagnosis
+- **Current milestone:** None — awaiting approval to begin Milestone 5
+- **Last completed milestone:** Milestone 4 — Recovery-Case State Machine and Known-Error Diagnosis
+- **Next proposed milestone:** Milestone 5 — Strict AI Interface and Deterministic Mock Scorer
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -70,7 +70,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 4 — Recovery-Case State Machine and Known-Error Diagnosis
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** Deterministic lifecycle handling and known Razorpay-style error classification.
 - **Dependencies:** Milestones 2–3.
 - **Acceptance criteria:**

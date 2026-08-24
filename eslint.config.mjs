@@ -29,5 +29,34 @@ export default defineConfig([
       ],
     },
   },
+  {
+    files: [
+      "src/recovery/state-machine.ts",
+      "src/recovery/transition-contracts.ts",
+      "src/diagnosis/**/*.ts",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "react",
+                "react/*",
+                "next",
+                "next/*",
+                "@/components/*",
+                "@/app/*",
+                "@/repositories/*",
+              ],
+              message:
+                "Pure recovery and diagnosis logic must not depend on persistence, UI, or routes.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   globalIgnores([".next/**", "coverage/**", "data/**"]),
 ]);

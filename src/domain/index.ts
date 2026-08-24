@@ -5,6 +5,7 @@ export * from "@/domain/diagnosis";
 export * from "@/domain/evaluation";
 export * from "@/domain/events";
 export * from "@/domain/payments";
+export * from "@/domain/payment-satisfaction";
 export * from "@/domain/policy";
 export * from "@/domain/primitives";
 export * from "@/domain/states";
