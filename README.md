@@ -2,7 +2,7 @@
 
 RecoverAI is a credential-free prototype for **Track 03 — AI Revenue Recovery** in the Razorpay AI Buildathon 2026. It explores how failed-payment events can become explainable, bounded recovery actions while measuring incremental **simulated** recovery across synthetic cases.
 
-> The current build contains a static product preview, durable local persistence, a deterministic recovery-case lifecycle, exact known-error diagnosis, a passive deterministic recommendation scorer, a side-effect-free policy firewall, a tamper-evident audit hash chain, and idempotent mock recovery execution. It does not process webhooks, call Razorpay, persist scoring or policy results automatically, mutate case state, contact customers, or create/cancel actual Payment Links. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
+> The current build connects those foundations into one persisted, credential-free vertical slice: a trusted synthetic failed-payment event becomes a case, diagnosis, passive mock-AI ranking, deterministic policy decision, one mock Payment Link, a trusted synthetic paid event, a recovered terminal state, and a verified audit chain. It does not expose a public webhook, verify external webhook signatures, call Razorpay, send a customer message, or move real money. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
 
 ## Requirements
 
@@ -16,10 +16,11 @@ No Razorpay or LLM credentials are needed for the default Demo Mode.
 ```bash
 npm install
 cp .env.example .env.local
+npm run db:migrate
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000/cases](http://localhost:3000/cases).
 
 The environment file is optional because safe defaults are built in:
 
@@ -190,6 +191,28 @@ Every material execution stage is appended to the tamper-evident audit chain wit
 
 All Payment Links and financial outcomes produced by this adapter are **simulated**. The implementation makes no real Razorpay request, sends no customer message, and does not claim production readiness or recovered merchant revenue.
 
+## Credential-free vertical-slice demo
+
+The Cases workspace runs two fixed synthetic scenarios from committed application code. It accepts no user-supplied payment amount, recipient, route, or arbitrary action.
+
+Primary recovery flow:
+
+1. Select **Start bounded recovery** for the primary case.
+2. RecoverAI claims a **Trusted Synthetic Demo Event** with signature status `NOT_CHECKED`.
+3. The persisted workflow reaches `LINK_CREATED` after exact diagnosis, deterministic seeded ranking, policy approval, and one idempotent mock Payment Link execution.
+4. Inspect the case to see the simulated expected-value calculation, ordered policy checks, mock-link record, contact count, and verified tamper-evident timeline.
+5. Select **Simulate mock link paid**. A fixed synthetic paid event moves the link to `PAID`, the case to terminal `RECOVERED`, and disables further recovery.
+
+Safety proof:
+
+1. Select **Run fixed 10× safety probe**.
+2. The scenario proposes exactly ten times its verified simulated amount.
+3. The deterministic firewall escalates at `INTENT_MONEY_INTEGRITY` before any executor, Payment Link, or contact action exists.
+
+The POST controls under `/api/demo/recovery/` require a strict empty JSON object and are rejected when `APP_MODE` is not `demo`. They are internal demo controls, not merchant APIs or webhook endpoints. Repeated start, completion, and unsafe-probe requests resume from validated persisted state and do not duplicate the logical action, link, paid event, recommendation, policy decision, contact count, or final transition.
+
+Milestone 9 deliberately bypasses the external webhook trust boundary: the events are created inside the application as trusted synthetic fixtures and remain visibly labelled `NOT_CHECKED`. Raw-body HMAC verification and secure provider delivery deduplication belong to Milestone 10 and are not claimed here.
+
 ## Verification
 
 Run each check independently:
@@ -217,6 +240,9 @@ npm run check
 - Clear Demo Mode, synthetic-data, and non-production indicators
 - Credential-free deterministic mock Razorpay capability adapter
 - Idempotent, policy-gated simulated Payment Link execution with audited safe failures
+- Interactive Cases workspace with one complete persisted recovery flow
+- Recovered terminal stopping and an exact 10× money-integrity safety proof
+- Dashboard-safe read models with no customer hash, public link URL, secrets, raw payload, or audit hashes
 - Restrained placeholders for later milestone routes
 - Reusable card, badge, table, layout, color, and chart foundations
 
@@ -235,7 +261,7 @@ The domain layer currently defines:
 - A deliberately separate Razorpay-style external payload boundary
 - Passive signature-verification and duplicate-processing result shapes
 
-The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer, policy firewall, audit hash chain, and isolated mock recovery executor are implemented. Webhook processing, provider-event reconciliation, policy-result orchestration, full vertical-slice UI wiring, and evaluation calculations remain deferred to their approved milestones.
+The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer, policy firewall, audit hash chain, mock recovery executor, persisted orchestration, and first vertical-slice UI are implemented. External webhook security, provider-event reconciliation, held-out evaluation, and the complete dashboard remain deferred to their approved milestones.
 
 ## Canonical project documents
 

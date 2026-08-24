@@ -1,14 +1,12 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { connection } from "next/server";
+
+import { CasesWorkspace } from "@/components/cases/cases-workspace";
+import { demoRuntime } from "@/orchestration/runtime";
 
 export const metadata = { title: "Cases" };
 
-export default function CasesPage() {
-  return (
-    <ComingSoon
-      description="A future case workspace for diagnosis evidence, bounded actions, and stopping decisions."
-      eyebrow="Recovery operations"
-      milestone="Milestones 4–14"
-      title="Cases"
-    />
-  );
+export default async function CasesPage() {
+  await connection();
+  const model = await demoRuntime().readModel.dashboard();
+  return <CasesWorkspace initialModel={model} />;
 }

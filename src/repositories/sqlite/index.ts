@@ -1,7 +1,7 @@
 import { and, asc, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { createSqliteAuditChain } from "@/audit";
+import { canonicalizeJson, createSqliteAuditChain } from "@/audit";
 import {
   aiRecommendationSchema,
   eventIdSchema,
@@ -203,6 +203,56 @@ function toPaymentLink(
   });
 }
 
+function toAiRecommendation(
+  row: typeof aiRecommendations.$inferSelect,
+): AiRecommendationRecord {
+  return aiRecommendationRecordSchema.parse({
+    recommendationId: row.recommendationId,
+    recommendation: parseStoredJson(
+      row.recommendationJson,
+      aiRecommendationSchema,
+      "AI recommendation JSON",
+    ),
+    createdAt: row.createdAt,
+  });
+}
+
+function toPolicyDecision(
+  row: typeof policyDecisions.$inferSelect,
+): PolicyDecisionRecord {
+  return policyDecisionRecordSchema.parse({
+    decisionId: row.decisionId,
+    decision: parseStoredJson(
+      row.decisionJson,
+      policyDecisionSchema,
+      "policy decision JSON",
+    ),
+    createdAt: row.createdAt,
+  });
+}
+
+function sameCanonical(left: unknown, right: unknown): boolean {
+  return canonicalizeJson(left) === canonicalizeJson(right);
+}
+
+function sameCaseIdentity(
+  expected: RecoveryCaseRecord,
+  existing: RecoveryCaseRecord,
+): boolean {
+  return (
+    expected.caseId === existing.caseId &&
+    expected.paymentId === existing.paymentId &&
+    expected.orderId === existing.orderId &&
+    expected.syntheticCustomerHash === existing.syntheticCustomerHash &&
+    expected.verifiedUnpaidAmountSubunits ===
+      existing.verifiedUnpaidAmountSubunits &&
+    expected.currency === existing.currency &&
+    expected.recoveryWindowStartsAt === existing.recoveryWindowStartsAt &&
+    expected.recoveryWindowEndsAt === existing.recoveryWindowEndsAt &&
+    expected.createdAt === existing.createdAt
+  );
+}
+
 function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
   const { db } = database;
   const auditChain = createSqliteAuditChain(database);
@@ -288,6 +338,49 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
       return toPersistedPaymentSnapshot(result);
     },
 
+    appendIdempotently(rawInput: PaymentSnapshotObservation) {
+      const input = paymentSnapshotObservationSchema.parse(rawInput);
+      if (input.sourceEventId === undefined) {
+        throw new UnexpectedPersistenceConflictError(
+          "Idempotent payment snapshots require a source event identifier.",
+        );
+      }
+      const sourceEventId = input.sourceEventId;
+      const operation = database.client.transaction(() => {
+        const existing = this.findBySourceEventId(sourceEventId);
+        if (existing !== null) {
+          const comparable = {
+            snapshot: existing.snapshot,
+            observedAt: existing.observedAt,
+            sourceEventId: existing.sourceEventId,
+            createdAt: existing.createdAt,
+          };
+          return {
+            status: sameCanonical(comparable, input)
+              ? ("EXISTING" as const)
+              : ("CONFLICT" as const),
+            snapshot: existing,
+          };
+        }
+        return {
+          status: "CREATED" as const,
+          snapshot: this.append(input),
+        };
+      });
+      return operation.immediate();
+    },
+
+    findBySourceEventId(sourceEventId: string) {
+      const validatedId = eventIdSchema.parse(sourceEventId);
+      const row = db
+        .select()
+        .from(paymentSnapshots)
+        .where(eq(paymentSnapshots.sourceEventId, validatedId))
+        .orderBy(asc(paymentSnapshots.snapshotSequence))
+        .get();
+      return row === undefined ? null : toPersistedPaymentSnapshot(row);
+    },
+
     findLatestByPaymentId(paymentId: string) {
       const validatedId = paymentIdSchema.parse(paymentId);
       const row = db
@@ -322,6 +415,31 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
       const input = recoveryCaseRecordSchema.parse(rawInput);
       const row = db.insert(recoveryCases).values(input).returning().get();
       return toRecoveryCase(row);
+    },
+
+    createIdempotently(rawInput: RecoveryCaseRecord) {
+      const input = recoveryCaseRecordSchema.parse(rawInput);
+      const result = db
+        .insert(recoveryCases)
+        .values(input)
+        .onConflictDoNothing()
+        .run();
+      const existing =
+        this.findById(input.caseId) ?? this.findByPaymentId(input.paymentId);
+      if (existing === null) {
+        throw new UnexpectedPersistenceConflictError(
+          "Recovery-case idempotent insert has no persisted record.",
+        );
+      }
+      return {
+        status:
+          result.changes === 1
+            ? ("CREATED" as const)
+            : sameCaseIdentity(input, existing)
+              ? ("EXISTING" as const)
+              : ("CONFLICT" as const),
+        recoveryCase: existing,
+      };
     },
 
     findById(caseId: string) {
@@ -396,6 +514,53 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
       return input;
     },
 
+    insertIdempotently(rawInput: AiRecommendationRecord) {
+      const input = aiRecommendationRecordSchema.parse(rawInput);
+      const result = db
+        .insert(aiRecommendations)
+        .values({
+          recommendationId: input.recommendationId,
+          caseId: input.recommendation.caseId,
+          recommendationJson: JSON.stringify(input.recommendation),
+          selectedAction: input.recommendation.selectedAction,
+          confidence: Math.round(input.recommendation.confidence * 1_000_000),
+          contextStatus: input.recommendation.contextStatus,
+          escalationRecommended: input.recommendation.escalationRecommended,
+          recommendedAt: input.recommendation.recommendedAt,
+          createdAt: input.createdAt,
+        })
+        .onConflictDoNothing({ target: aiRecommendations.recommendationId })
+        .run();
+      const existing = this.findById(input.recommendationId);
+      if (existing === null) {
+        throw new UnexpectedPersistenceConflictError(
+          "AI recommendation idempotent insert has no persisted record.",
+        );
+      }
+      return {
+        status:
+          result.changes === 1
+            ? ("CREATED" as const)
+            : sameCanonical(existing, input)
+              ? ("EXISTING" as const)
+              : ("CONFLICT" as const),
+        recommendation: existing,
+      };
+    },
+
+    findById(recommendationId: string) {
+      const validatedId =
+        aiRecommendationRecordSchema.shape.recommendationId.parse(
+          recommendationId,
+        );
+      const row = db
+        .select()
+        .from(aiRecommendations)
+        .where(eq(aiRecommendations.recommendationId, validatedId))
+        .get();
+      return row === undefined ? null : toAiRecommendation(row);
+    },
+
     listByCaseId(caseId: string) {
       const validatedId = recoveryCaseRecordSchema.shape.caseId.parse(caseId);
       return db
@@ -407,17 +572,7 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
           asc(aiRecommendations.recommendationId),
         )
         .all()
-        .map((row) =>
-          aiRecommendationRecordSchema.parse({
-            recommendationId: row.recommendationId,
-            recommendation: parseStoredJson(
-              row.recommendationJson,
-              aiRecommendationSchema,
-              "AI recommendation JSON",
-            ),
-            createdAt: row.createdAt,
-          }),
-        );
+        .map(toAiRecommendation);
     },
   };
 
@@ -442,6 +597,53 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
       return input;
     },
 
+    insertIdempotently(rawInput: PolicyDecisionRecord) {
+      const input = policyDecisionRecordSchema.parse(rawInput);
+      const result = db
+        .insert(policyDecisions)
+        .values({
+          decisionId: input.decisionId,
+          caseId: input.decision.caseId,
+          decisionJson: JSON.stringify(input.decision),
+          proposedAction: input.decision.proposedAction,
+          finalAction: input.decision.finalAction,
+          outcome: input.decision.outcome,
+          ruleId: input.decision.ruleId,
+          reason: input.decision.reason,
+          caseState: input.decision.caseState,
+          decidedAt: input.decision.decidedAt,
+          createdAt: input.createdAt,
+        })
+        .onConflictDoNothing({ target: policyDecisions.decisionId })
+        .run();
+      const existing = this.findById(input.decisionId);
+      if (existing === null) {
+        throw new UnexpectedPersistenceConflictError(
+          "Policy-decision idempotent insert has no persisted record.",
+        );
+      }
+      return {
+        status:
+          result.changes === 1
+            ? ("CREATED" as const)
+            : sameCanonical(existing, input)
+              ? ("EXISTING" as const)
+              : ("CONFLICT" as const),
+        decision: existing,
+      };
+    },
+
+    findById(decisionId: string) {
+      const validatedId =
+        policyDecisionRecordSchema.shape.decisionId.parse(decisionId);
+      const row = db
+        .select()
+        .from(policyDecisions)
+        .where(eq(policyDecisions.decisionId, validatedId))
+        .get();
+      return row === undefined ? null : toPolicyDecision(row);
+    },
+
     listByCaseId(caseId: string) {
       const validatedId = recoveryCaseRecordSchema.shape.caseId.parse(caseId);
       return db
@@ -453,17 +655,7 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
           asc(policyDecisions.decisionId),
         )
         .all()
-        .map((row) =>
-          policyDecisionRecordSchema.parse({
-            decisionId: row.decisionId,
-            decision: parseStoredJson(
-              row.decisionJson,
-              policyDecisionSchema,
-              "policy decision JSON",
-            ),
-            createdAt: row.createdAt,
-          }),
-        );
+        .map(toPolicyDecision);
     },
   };
 
@@ -501,6 +693,20 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
         .where(eq(recoveryActions.idempotencyKey, validatedKey))
         .get();
       return row === undefined ? null : toRecoveryAction(row);
+    },
+
+    listByCaseId(caseId: string) {
+      const validatedId = recoveryCaseRecordSchema.shape.caseId.parse(caseId);
+      return db
+        .select()
+        .from(recoveryActions)
+        .where(eq(recoveryActions.caseId, validatedId))
+        .orderBy(
+          asc(recoveryActions.requestedAt),
+          asc(recoveryActions.actionRecordId),
+        )
+        .all()
+        .map(toRecoveryAction);
     },
 
     updateIfStatus(rawInput: RecoveryActionStatusUpdate) {
@@ -611,6 +817,17 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
         )
         .get();
       return row === undefined ? null : toPaymentLink(row);
+    },
+
+    listByCaseId(caseId: string) {
+      const validatedId = recoveryCaseRecordSchema.shape.caseId.parse(caseId);
+      return db
+        .select()
+        .from(paymentLinks)
+        .where(eq(paymentLinks.caseId, validatedId))
+        .orderBy(asc(paymentLinks.createdAt), asc(paymentLinks.recoveryLinkId))
+        .all()
+        .map(toPaymentLink);
     },
 
     updateLifecycle(rawInput: PaymentLinkLifecycleUpdate) {

@@ -274,3 +274,24 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** SQLite and an external provider cannot share one transaction. Making this boundary explicit prevents long-held locks, duplicate financial side effects, and false claims that a completed provider operation is fully audited when local evidence is incomplete.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-25
+
+## ADR-040 — The first vertical slice uses an explicit trusted synthetic event boundary
+
+- **Decision:** Create the Milestone 9 failure and paid events only from fixed internal fixtures, label their source `Trusted Synthetic Demo Event`, retain signature status `NOT_CHECKED`, accept no public webhook request, and never describe them as externally verified. Secure raw-body provider verification remains deferred to Milestone 10.
+- **Reason:** The credential-free vertical slice needs realistic persisted event flow without implying that an external untrusted request crossed a security boundary that has not been implemented.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-041 — Orchestration resumes from validated persisted facts
+
+- **Decision:** Derive demo progress from deterministic event, case, recommendation, decision, action, link, contact-count, transition, and audit records. Reuse identical records through narrow conflict-aware repository methods, fail closed on content conflict, and reconstruct the deterministic mock adapter from persisted payment and link state rather than trusting an in-memory step marker.
+- **Reason:** Interruption after a financial or local persistence boundary must converge without repeating the mock financial operation, customer-facing instrument, contact count, or final state transition.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-042 — The demo UI consumes a privacy-minimized persisted read model
+
+- **Decision:** Expose only fixed synthetic references, visibly simulated money, diagnosis, passive ranking, expected-value breakdown, policy checks, sanitized action/link status, contact count, hash-free timeline entries, actual audit verification, workflow controls, and unsafe-proof facts. Exclude customer hashes, raw payloads, secrets, public link URLs, executable instructions, and audit hashes.
+- **Reason:** Judges need enough evidence to understand the full decision path without expanding the UI into a financial authority or leaking durable private and integrity material.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25

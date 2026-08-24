@@ -19,7 +19,7 @@ const items = [
     icon: Activity,
     available: false,
   },
-  { href: "/cases", label: "Cases", icon: ListChecks, available: false },
+  { href: "/cases", label: "Cases", icon: ListChecks, available: true },
   {
     href: "/policy",
     label: "Policy Firewall",
@@ -47,7 +47,9 @@ export function SidebarNav() {
     <nav aria-label="RecoverAI sections" className="sidebar-nav">
       {items.map((item) => {
         const Icon = item.icon;
-        const isActive = pathname === item.href;
+        const isActive =
+          pathname === item.href ||
+          (item.href !== "/" && pathname.startsWith(`${item.href}/`));
 
         return (
           <Link

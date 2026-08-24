@@ -34,6 +34,13 @@ export interface WebhookEventRepository {
 
 export interface PaymentSnapshotRepository {
   append(input: PaymentSnapshotObservation): PersistedPaymentSnapshot;
+  appendIdempotently(
+    input: PaymentSnapshotObservation,
+  ):
+    | { status: "CREATED"; snapshot: PersistedPaymentSnapshot }
+    | { status: "EXISTING"; snapshot: PersistedPaymentSnapshot }
+    | { status: "CONFLICT"; snapshot: PersistedPaymentSnapshot };
+  findBySourceEventId(sourceEventId: string): PersistedPaymentSnapshot | null;
   findLatestByPaymentId(paymentId: string): PersistedPaymentSnapshot | null;
   listByPaymentId(paymentId: string): PersistedPaymentSnapshot[];
 }
@@ -44,6 +51,12 @@ export type RecoveryCaseVersionUpdateResult =
 
 export interface RecoveryCaseRepository {
   create(input: RecoveryCaseRecord): RecoveryCaseRecord;
+  createIdempotently(
+    input: RecoveryCaseRecord,
+  ):
+    | { status: "CREATED"; recoveryCase: RecoveryCaseRecord }
+    | { status: "EXISTING"; recoveryCase: RecoveryCaseRecord }
+    | { status: "CONFLICT"; recoveryCase: RecoveryCaseRecord };
   findById(caseId: string): RecoveryCaseRecord | null;
   findByPaymentId(paymentId: string): RecoveryCaseRecord | null;
   updateIfVersionMatches(
@@ -53,11 +66,25 @@ export interface RecoveryCaseRepository {
 
 export interface AiRecommendationRepository {
   insert(input: AiRecommendationRecord): AiRecommendationRecord;
+  insertIdempotently(
+    input: AiRecommendationRecord,
+  ):
+    | { status: "CREATED"; recommendation: AiRecommendationRecord }
+    | { status: "EXISTING"; recommendation: AiRecommendationRecord }
+    | { status: "CONFLICT"; recommendation: AiRecommendationRecord };
+  findById(recommendationId: string): AiRecommendationRecord | null;
   listByCaseId(caseId: string): AiRecommendationRecord[];
 }
 
 export interface PolicyDecisionRepository {
   insert(input: PolicyDecisionRecord): PolicyDecisionRecord;
+  insertIdempotently(
+    input: PolicyDecisionRecord,
+  ):
+    | { status: "CREATED"; decision: PolicyDecisionRecord }
+    | { status: "EXISTING"; decision: PolicyDecisionRecord }
+    | { status: "CONFLICT"; decision: PolicyDecisionRecord };
+  findById(decisionId: string): PolicyDecisionRecord | null;
   listByCaseId(caseId: string): PolicyDecisionRecord[];
 }
 
@@ -70,6 +97,7 @@ export interface RecoveryActionRepository {
     input: RecoveryActionRecord,
   ): IdempotentRecoveryActionResult;
   findByIdempotencyKey(idempotencyKey: string): RecoveryActionRecord | null;
+  listByCaseId(caseId: string): RecoveryActionRecord[];
   updateIfStatus(
     input: RecoveryActionStatusUpdate,
   ):
@@ -90,6 +118,7 @@ export interface PaymentLinkRepository {
   findByRecoveryLinkId(recoveryLinkId: string): PaymentLinkRecord | null;
   findByReferenceId(referenceId: string): PaymentLinkRecord | null;
   findBlockingByOrderId(orderId: string): PaymentLinkRecord | null;
+  listByCaseId(caseId: string): PaymentLinkRecord[];
   updateLifecycle(input: PaymentLinkLifecycleUpdate): PaymentLinkRecord | null;
 }
 

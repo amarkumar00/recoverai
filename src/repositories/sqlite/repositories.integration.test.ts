@@ -787,6 +787,79 @@ describe("SQLite repositories", () => {
     }
   });
 
+  it("supports narrow conflict-aware idempotency needed for orchestration resume", () => {
+    const { database } = openMigratedDatabase();
+    const repositories = createSqliteRepositories(database);
+
+    try {
+      repositories.webhookEvents.claim(makeWebhookClaim());
+      const snapshot = paymentSnapshotObservationSchema.parse({
+        ...makeSnapshot("FAILED", canonicalTime),
+        sourceEventId: "event_internal_001",
+      });
+      expect(
+        repositories.paymentSnapshots.appendIdempotently(snapshot).status,
+      ).toBe("CREATED");
+      expect(
+        repositories.paymentSnapshots.appendIdempotently(snapshot).status,
+      ).toBe("EXISTING");
+      expect(
+        repositories.paymentSnapshots.appendIdempotently({
+          ...snapshot,
+          observedAt: laterTime,
+        }).status,
+      ).toBe("CONFLICT");
+
+      const recoveryCase = makeRecoveryCase();
+      expect(
+        repositories.recoveryCases.createIdempotently(recoveryCase).status,
+      ).toBe("CREATED");
+      expect(
+        repositories.recoveryCases.createIdempotently(recoveryCase).status,
+      ).toBe("EXISTING");
+      expect(
+        repositories.recoveryCases.createIdempotently({
+          ...recoveryCase,
+          verifiedUnpaidAmountSubunits: 999_999,
+        }).status,
+      ).toBe("CONFLICT");
+
+      const recommendation = aiRecommendationRecordSchema.parse({
+        recommendationId: "recommendation_resume_001",
+        recommendation: validAiRecommendation,
+        createdAt: canonicalTime,
+      });
+      expect(
+        repositories.aiRecommendations.insertIdempotently(recommendation)
+          .status,
+      ).toBe("CREATED");
+      expect(
+        repositories.aiRecommendations.insertIdempotently(recommendation)
+          .status,
+      ).toBe("EXISTING");
+      expect(
+        repositories.aiRecommendations.findById("recommendation_resume_001"),
+      ).toEqual(recommendation);
+
+      const decision = policyDecisionRecordSchema.parse({
+        decisionId: "decision_resume_001",
+        decision: validPolicyDecision,
+        createdAt: canonicalTime,
+      });
+      expect(
+        repositories.policyDecisions.insertIdempotently(decision).status,
+      ).toBe("CREATED");
+      expect(
+        repositories.policyDecisions.insertIdempotently(decision).status,
+      ).toBe("EXISTING");
+      expect(
+        repositories.policyDecisions.findById("decision_resume_001"),
+      ).toEqual(decision);
+    } finally {
+      database.client.close();
+    }
+  });
+
   it("loads in a Node test environment with no UI or route runtime", () => {
     const { database } = openMigratedDatabase();
     try {

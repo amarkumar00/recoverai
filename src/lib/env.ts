@@ -4,7 +4,7 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
-  APP_MODE: z.literal("demo").default("demo"),
+  APP_MODE: z.enum(["demo", "disabled"]).default("demo"),
   DATABASE_PATH: z.string().trim().min(1).default("./data/recoverai.db"),
 });
 

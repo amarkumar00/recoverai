@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 9
-- **Last completed milestone:** Milestone 8 — Mock Razorpay Adapter and Idempotent Recovery Execution
-- **Next proposed milestone:** Milestone 9 — First End-to-End Vertical Slice
+- **Current milestone:** None — awaiting approval to begin Milestone 10
+- **Last completed milestone:** Milestone 9 — First End-to-End Vertical Slice
+- **Next proposed milestone:** Milestone 10 — Razorpay-Style Webhook Security and Event Deduplication
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -134,7 +134,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 9 — First End-to-End Vertical Slice
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** One synthetic failed payment completes the entire mock recovery workflow and appears in the dashboard.
 - **Dependencies:** Milestones 1–8.
 - **Acceptance criteria:**
