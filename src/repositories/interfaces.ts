@@ -8,6 +8,7 @@ import type {
   PersistedWebhookEvent,
   PolicyDecisionRecord,
   RecoveryActionRecord,
+  RecoveryActionStatusUpdate,
   RecoveryCaseRecord,
   RecoveryCaseVersionUpdate,
   WebhookEventClaim,
@@ -69,6 +70,11 @@ export interface RecoveryActionRepository {
     input: RecoveryActionRecord,
   ): IdempotentRecoveryActionResult;
   findByIdempotencyKey(idempotencyKey: string): RecoveryActionRecord | null;
+  updateIfStatus(
+    input: RecoveryActionStatusUpdate,
+  ):
+    | { status: "UPDATED"; action: RecoveryActionRecord }
+    | { status: "STATUS_MISMATCH"; action: RecoveryActionRecord | null };
 }
 
 export type PaymentLinkInsertResult =

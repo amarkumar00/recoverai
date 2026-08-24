@@ -32,6 +32,7 @@ import {
   persistedWebhookEventSchema,
   policyDecisionRecordSchema,
   recoveryActionRecordSchema,
+  recoveryActionStatusUpdateSchema,
   recoveryCaseRecordSchema,
   recoveryCaseVersionUpdateSchema,
   webhookEventClaimSchema,
@@ -44,6 +45,7 @@ import {
   type PersistedWebhookEvent,
   type PolicyDecisionRecord,
   type RecoveryActionRecord,
+  type RecoveryActionStatusUpdate,
   type RecoveryCaseRecord,
   type RecoveryCaseVersionUpdate,
   type WebhookEventClaim,
@@ -499,6 +501,42 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
         .where(eq(recoveryActions.idempotencyKey, validatedKey))
         .get();
       return row === undefined ? null : toRecoveryAction(row);
+    },
+
+    updateIfStatus(rawInput: RecoveryActionStatusUpdate) {
+      const input = recoveryActionStatusUpdateSchema.parse(rawInput);
+      const row = db
+        .update(recoveryActions)
+        .set({
+          status: input.status,
+          attemptCount: input.attemptCount,
+          safeResultCode: input.safeResultCode,
+          safeResultDetail: input.safeResultDetail,
+          safeErrorReason: input.safeErrorReason,
+          startedAt: input.startedAt,
+          completedAt: input.completedAt,
+          updatedAt: input.updatedAt,
+        })
+        .where(
+          and(
+            eq(recoveryActions.actionRecordId, input.actionRecordId),
+            eq(recoveryActions.status, input.expectedStatus),
+          ),
+        )
+        .returning()
+        .get();
+      if (row !== undefined) {
+        return { status: "UPDATED" as const, action: toRecoveryAction(row) };
+      }
+      const existing = db
+        .select()
+        .from(recoveryActions)
+        .where(eq(recoveryActions.actionRecordId, input.actionRecordId))
+        .get();
+      return {
+        status: "STATUS_MISMATCH" as const,
+        action: existing === undefined ? null : toRecoveryAction(existing),
+      };
     },
   };
 

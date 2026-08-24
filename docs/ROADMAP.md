@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 8
-- **Last completed milestone:** Milestone 7 — Tamper-Evident Audit Hash Chain
-- **Next proposed milestone:** Milestone 8 — Mock Razorpay Adapter and Idempotent Recovery Execution
+- **Current milestone:** None — awaiting approval to begin Milestone 9
+- **Last completed milestone:** Milestone 8 — Mock Razorpay Adapter and Idempotent Recovery Execution
+- **Next proposed milestone:** Milestone 9 — First End-to-End Vertical Slice
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -121,7 +121,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 8 — Mock Razorpay Adapter and Idempotent Recovery Execution
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** Domain logic can fetch payments, inspect downtime, create/cancel mock Payment Links, and simulate success without external credentials.
 - **Dependencies:** Milestones 3, 6, and 7.
 - **Acceptance criteria:**

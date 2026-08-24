@@ -28,6 +28,7 @@ import {
   paymentSnapshotObservationSchema,
   policyDecisionRecordSchema,
   recoveryActionRecordSchema,
+  recoveryActionStatusUpdateSchema,
   recoveryCaseRecordSchema,
   recoveryCaseVersionUpdateSchema,
   webhookEventClaimSchema,
@@ -502,6 +503,126 @@ describe("SQLite repositories", () => {
       expect(
         repositories.recoveryActions.recordIdempotently(duplicate),
       ).toEqual({ status: "EXISTING", action: first });
+    } finally {
+      database.client.close();
+    }
+  });
+
+  it("uses compare-and-set recovery-action lifecycle transitions", () => {
+    const { database } = openMigratedDatabase();
+    const repositories = createSqliteRepositories(database);
+
+    try {
+      repositories.recoveryCases.create(makeRecoveryCase());
+      repositories.recoveryActions.recordIdempotently(makeAction());
+      expect(
+        repositories.recoveryActions.updateIfStatus(
+          recoveryActionStatusUpdateSchema.parse({
+            actionRecordId: "action_record_001",
+            expectedStatus: "REQUESTED",
+            status: "STARTED",
+            attemptCount: 1,
+            startedAt: laterTime,
+            updatedAt: laterTime,
+          }),
+        ),
+      ).toMatchObject({
+        status: "UPDATED",
+        action: { status: "STARTED", attemptCount: 1 },
+      });
+      expect(
+        repositories.recoveryActions.updateIfStatus(
+          recoveryActionStatusUpdateSchema.parse({
+            actionRecordId: "action_record_001",
+            expectedStatus: "REQUESTED",
+            status: "FAILED_SAFE",
+            attemptCount: 0,
+            safeResultCode: "STALE_WRITER",
+            completedAt: latestTime,
+            updatedAt: latestTime,
+          }),
+        ),
+      ).toMatchObject({
+        status: "STATUS_MISMATCH",
+        action: { status: "STARTED", attemptCount: 1 },
+      });
+      expect(
+        repositories.recoveryActions.updateIfStatus(
+          recoveryActionStatusUpdateSchema.parse({
+            actionRecordId: "action_record_001",
+            expectedStatus: "STARTED",
+            status: "SUCCEEDED",
+            attemptCount: 1,
+            safeResultCode: "WAIT_RECORDED",
+            completedAt: latestTime,
+            updatedAt: latestTime,
+          }),
+        ),
+      ).toMatchObject({
+        status: "UPDATED",
+        action: { status: "SUCCEEDED", safeResultCode: "WAIT_RECORDED" },
+      });
+    } finally {
+      database.client.close();
+    }
+  });
+
+  it("persists failed-safe and cancelled terminal action outcomes", () => {
+    const { database } = openMigratedDatabase();
+    const repositories = createSqliteRepositories(database);
+
+    try {
+      repositories.recoveryCases.create(makeRecoveryCase());
+      repositories.recoveryActions.recordIdempotently(
+        makeAction({
+          actionRecordId: "action_record_failed",
+          idempotencyKey: "action_idempotency_failed",
+        }),
+      );
+      expect(
+        repositories.recoveryActions.updateIfStatus(
+          recoveryActionStatusUpdateSchema.parse({
+            actionRecordId: "action_record_failed",
+            expectedStatus: "REQUESTED",
+            status: "FAILED_SAFE",
+            attemptCount: 0,
+            safeResultCode: "DEPENDENCY_UNAVAILABLE",
+            safeErrorReason: "The bounded dependency was unavailable.",
+            completedAt: laterTime,
+            updatedAt: laterTime,
+          }),
+        ),
+      ).toMatchObject({ status: "UPDATED", action: { status: "FAILED_SAFE" } });
+
+      repositories.recoveryActions.recordIdempotently(
+        makeAction({
+          actionRecordId: "action_record_cancelled",
+          idempotencyKey: "action_idempotency_cancelled",
+        }),
+      );
+      repositories.recoveryActions.updateIfStatus(
+        recoveryActionStatusUpdateSchema.parse({
+          actionRecordId: "action_record_cancelled",
+          expectedStatus: "REQUESTED",
+          status: "STARTED",
+          attemptCount: 1,
+          startedAt: laterTime,
+          updatedAt: laterTime,
+        }),
+      );
+      expect(
+        repositories.recoveryActions.updateIfStatus(
+          recoveryActionStatusUpdateSchema.parse({
+            actionRecordId: "action_record_cancelled",
+            expectedStatus: "STARTED",
+            status: "CANCELLED",
+            attemptCount: 1,
+            safeResultCode: "EXECUTION_CANCELLED",
+            completedAt: latestTime,
+            updatedAt: latestTime,
+          }),
+        ),
+      ).toMatchObject({ status: "UPDATED", action: { status: "CANCELLED" } });
     } finally {
       database.client.close();
     }

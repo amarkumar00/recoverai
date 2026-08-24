@@ -2,7 +2,7 @@
 
 RecoverAI is a credential-free prototype for **Track 03 — AI Revenue Recovery** in the Razorpay AI Buildathon 2026. It explores how failed-payment events can become explainable, bounded recovery actions while measuring incremental **simulated** recovery across synthetic cases.
 
-> The current build contains a static product preview, durable local persistence, a deterministic recovery-case lifecycle, exact known-error diagnosis, a passive deterministic recommendation scorer, a side-effect-free policy firewall, and a tamper-evident audit hash chain. It does not process webhooks, call Razorpay, persist scoring or policy results automatically, mutate case state, contact customers, or create/cancel actual Payment Links. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
+> The current build contains a static product preview, durable local persistence, a deterministic recovery-case lifecycle, exact known-error diagnosis, a passive deterministic recommendation scorer, a side-effect-free policy firewall, a tamper-evident audit hash chain, and idempotent mock recovery execution. It does not process webhooks, call Razorpay, persist scoring or policy results automatically, mutate case state, contact customers, or create/cancel actual Payment Links. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
 
 ## Requirements
 
@@ -172,6 +172,24 @@ Rule precedence is fixed: identity integrity → conflicting/partial payment sta
 
 Every decision contains ordered `PASSED`, `FAILED`, or `NOT_APPLICABLE` checks and one exact primary rule. Evaluation uses injected timestamps and performs no persistence, case transition, audit write, network request, Razorpay call, Payment Link operation, customer contact, retry, random operation, or ambient clock read. Future orchestration will persist and execute permitted decisions.
 
+## Idempotent mock recovery execution
+
+The provider-independent capability port in `src/ports/razorpay.ts` exposes only the narrow operations needed by the locked MVP: fetch current payment state, inspect downtime, and create, fetch, or cancel a Payment Link. It exposes no original-payment retry, capture, refund, routing, subscription, messaging, or arbitrary request capability. The default `DeterministicMockRazorpayAdapter` uses only injected fixture state—no credentials, network, random source, or ambient clock—and returns defensive, strictly validated results.
+
+`RecoveryActionExecutor` accepts a strict command containing the trusted case, deterministic policy decision, matching action intent, injected execution timestamp, and bounded timeout. AI output never reaches this boundary directly and cannot construct provider operations. Before creating a simulated Payment Link, the executor fetches the current payment and verifies payment ID, order ID, integer amount, currency, and unpaid status. Authorization or capture stops creation. Existing safe links are reused, while conflicting or partially paid links fail safe or require review.
+
+Execution identities are stable SHA-256-derived references in the versioned `recoverai_exec_v1` namespace. Recovery actions use a compare-and-set lifecycle:
+
+```text
+REQUESTED → STARTED → SUCCEEDED | FAILED_SAFE | CANCELLED
+```
+
+Only the successful claim may begin an adapter operation. Replays return the persisted result, concurrent claims cannot create a second link, and uncertain timeouts are recorded without automatic retry. Mock cancellation first fetches the latest link state and never repeats cancellation for paid, partially paid, expired, or already-cancelled links.
+
+Every material execution stage is appended to the tamper-evident audit chain with sanitized operational identifiers and fixed explanations. The initial audit append must succeed before any adapter call. SQLite transactions are never held across an awaited adapter operation; consequently the external mock operation, local persistence, and audit append are not one atomic transaction. If audit completion fails after an operation, the executor returns `AUDIT_INCOMPLETE`, preserves the observed local result where available, and does not automatically repeat the financial operation.
+
+All Payment Links and financial outcomes produced by this adapter are **simulated**. The implementation makes no real Razorpay request, sends no customer message, and does not claim production readiness or recovered merchant revenue.
+
 ## Verification
 
 Run each check independently:
@@ -197,6 +215,8 @@ npm run check
 - Baseline vs RecoverAI **simulated** recovery comparison
 - Synthetic failure-class distribution
 - Clear Demo Mode, synthetic-data, and non-production indicators
+- Credential-free deterministic mock Razorpay capability adapter
+- Idempotent, policy-gated simulated Payment Link execution with audited safe failures
 - Restrained placeholders for later milestone routes
 - Reusable card, badge, table, layout, color, and chart foundations
 
@@ -215,7 +235,7 @@ The domain layer currently defines:
 - A deliberately separate Razorpay-style external payload boundary
 - Passive signature-verification and duplicate-processing result shapes
 
-The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer, policy firewall, and audit hash chain are implemented, while webhook processing, payment fetching/reconciliation, policy persistence, recovery execution, and evaluation calculations remain deferred to their approved milestones.
+The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer, policy firewall, audit hash chain, and isolated mock recovery executor are implemented. Webhook processing, provider-event reconciliation, policy-result orchestration, full vertical-slice UI wiring, and evaluation calculations remain deferred to their approved milestones.
 
 ## Canonical project documents
 

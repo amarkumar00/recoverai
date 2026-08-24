@@ -253,3 +253,24 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** Integrity hashing must not turn secrets, PII, raw provider payloads, or model internals into durable copied data. Audit evidence should explain decisions using safe references and codes.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-25
+
+## ADR-037 — Recovery execution depends on a narrow capability port
+
+- **Decision:** Expose only current-payment fetch, downtime inspection, and Payment Link create, fetch, and cancel operations through the provider-independent recovery port. Keep the default adapter credential-free, deterministic, in-memory, strictly validated, and observable through sanitized test controls and a call log. Do not expose original-payment retry, capture, refund, routing, subscription, messaging, or arbitrary request capabilities.
+- **Reason:** A small capability surface makes the locked MVP testable without credentials and prevents AI or orchestration code from acquiring undocumented or unnecessary financial authority.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-038 — Stable execution identities and compare-and-set action ownership
+
+- **Decision:** Derive action IDs, idempotency keys, Payment Link references, local link IDs, and audit entry IDs from a versioned canonical SHA-256 execution identity. Claim recovery actions idempotently and advance them only through compare-and-set `REQUESTED → STARTED → SUCCEEDED | FAILED_SAFE | CANCELLED` transitions. Return stored results or in-progress status to competing replays instead of repeating an adapter operation.
+- **Reason:** Stable identities plus database-enforced ownership provide reproducible replay behavior and ensure that only one execution attempt can create or cancel a simulated Payment Link.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25
+
+## ADR-039 — External outcomes, persistence, and audit are explicitly non-atomic
+
+- **Decision:** Never hold a SQLite transaction across an awaited adapter call. Require the initial audit append before adapter use, audit material preconditions and outcomes, and return `AUDIT_INCOMPLETE` when post-call evidence cannot be completed. Preserve an observed external result where possible and never automatically retry an uncertain create or cancel outcome.
+- **Reason:** SQLite and an external provider cannot share one transaction. Making this boundary explicit prevents long-held locks, duplicate financial side effects, and false claims that a completed provider operation is fully audited when local evidence is incomplete.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-25

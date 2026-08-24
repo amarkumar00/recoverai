@@ -153,6 +153,35 @@ export const recoveryActionRecordSchema = z
   })
   .strict();
 
+export const recoveryActionStatusUpdateSchema = z
+  .object({
+    actionRecordId: persistenceIdSchema,
+    expectedStatus: recoveryActionStatusSchema,
+    status: recoveryActionStatusSchema,
+    attemptCount: nonnegativeCountSchema,
+    safeResultCode: boundedProviderValueSchema.optional(),
+    safeResultDetail: z.string().trim().min(1).max(500).optional(),
+    safeErrorReason: boundedReasonSchema.optional(),
+    startedAt: optionalTimestampSchema,
+    completedAt: optionalTimestampSchema,
+    updatedAt: canonicalTimestampSchema,
+  })
+  .strict()
+  .superRefine(({ expectedStatus, status }, context) => {
+    const allowed =
+      (expectedStatus === "REQUESTED" &&
+        ["STARTED", "FAILED_SAFE", "CANCELLED"].includes(status)) ||
+      (expectedStatus === "STARTED" &&
+        ["SUCCEEDED", "FAILED_SAFE", "CANCELLED"].includes(status));
+    if (!allowed) {
+      context.addIssue({
+        code: "custom",
+        path: ["status"],
+        message: "Recovery action status transition is not allowed.",
+      });
+    }
+  });
+
 export const paymentLinkStatusSchema = z.enum([
   "CREATED",
   "PARTIALLY_PAID",
@@ -242,6 +271,9 @@ export type AiRecommendationRecord = z.infer<
 >;
 export type PolicyDecisionRecord = z.infer<typeof policyDecisionRecordSchema>;
 export type RecoveryActionRecord = z.infer<typeof recoveryActionRecordSchema>;
+export type RecoveryActionStatusUpdate = z.infer<
+  typeof recoveryActionStatusUpdateSchema
+>;
 export type PaymentLinkRecord = z.infer<typeof paymentLinkRecordSchema>;
 export type PaymentLinkLifecycleUpdate = z.infer<
   typeof paymentLinkLifecycleUpdateSchema
