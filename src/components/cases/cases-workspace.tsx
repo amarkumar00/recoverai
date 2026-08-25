@@ -104,9 +104,10 @@ export function CasesWorkspace({
       <div className="prototype-notice" role="note">
         <ShieldAlert aria-hidden="true" size={18} />
         <p>
-          Trusted synthetic demo events bypass external webhook verification in
-          this milestone. No public webhook exists, no real payment moves, and
-          no production-readiness claim is made.
+          Trusted synthetic demo events remain separate from the
+          signature-verified public webhook boundary. Their status is always
+          NOT_CHECKED; no real payment moves and no production-readiness claim
+          is made.
         </p>
       </div>
       <section aria-labelledby="demo-cases-heading">

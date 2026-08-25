@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 10
-- **Last completed milestone:** Milestone 9 — First End-to-End Vertical Slice
-- **Next proposed milestone:** Milestone 10 — Razorpay-Style Webhook Security and Event Deduplication
+- **Current milestone:** None — awaiting approval to begin Milestone 11
+- **Last completed milestone:** Milestone 10 — Razorpay-Style Webhook Security and Event Deduplication
+- **Next proposed milestone:** Milestone 11 — Out-of-Order Handling and Payment-State Reconciliation
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -146,7 +146,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 10 — Razorpay-Style Webhook Security and Event Deduplication
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** Secure ingestion of Razorpay-style webhook requests.
 - **Dependencies:** Milestones 2–3 and 9.
 - **Acceptance criteria:**

@@ -6,10 +6,12 @@ const envSchema = z.object({
     .default("development"),
   APP_MODE: z.enum(["demo", "disabled"]).default("demo"),
   DATABASE_PATH: z.string().trim().min(1).default("./data/recoverai.db"),
+  RAZORPAY_WEBHOOK_SECRET: z.string().min(1).max(1_024).optional(),
 });
 
 export const env = envSchema.parse({
   NODE_ENV: process.env.NODE_ENV,
   APP_MODE: process.env.APP_MODE,
   DATABASE_PATH: process.env.DATABASE_PATH,
+  RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
 });

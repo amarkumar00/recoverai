@@ -2,7 +2,7 @@
 
 RecoverAI is a credential-free prototype for **Track 03 — AI Revenue Recovery** in the Razorpay AI Buildathon 2026. It explores how failed-payment events can become explainable, bounded recovery actions while measuring incremental **simulated** recovery across synthetic cases.
 
-> The current build connects those foundations into one persisted, credential-free vertical slice: a trusted synthetic failed-payment event becomes a case, diagnosis, passive mock-AI ranking, deterministic policy decision, one mock Payment Link, a trusted synthetic paid event, a recovered terminal state, and a verified audit chain. It does not expose a public webhook, verify external webhook signatures, call Razorpay, send a customer message, or move real money. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
+> The current build connects those foundations into one persisted, credential-free vertical slice and adds a separate Razorpay-style public webhook boundary. The public boundary verifies HMAC-SHA256 against the exact raw request bytes, validates and normalizes signed events, and durably suppresses duplicate provider event IDs before one downstream audit effect. It does not call Razorpay, send a customer message, move real money, or run recovery from a public event before current-state reconciliation exists. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
 
 ## Requirements
 
@@ -26,6 +26,55 @@ The environment file is optional because safe defaults are built in:
 
 - `APP_MODE=demo`
 - `DATABASE_PATH=./data/recoverai.db`
+
+`RAZORPAY_WEBHOOK_SECRET` is optional. Without it, the dashboard and internal
+synthetic demo remain fully usable, while the public webhook endpoint returns a
+safe `WEBHOOK_NOT_CONFIGURED` response without initializing ingestion.
+
+## Razorpay-style webhook boundary
+
+`POST /api/webhooks/razorpay` is the only public provider-event boundary. It
+follows Razorpay's documented validation model:
+
+- `X-Razorpay-Signature` is checked as an HMAC-SHA256 hex digest using the
+  exact, untouched request bytes as the message and the server-only webhook
+  secret as the key.
+- Signature comparison is timing-safe after strict hex validation. Missing,
+  malformed, or invalid signatures are rejected before JSON parsing, database
+  persistence, downstream processing, or audit writes.
+- `x-razorpay-event-id` is the durable idempotency boundary. The first valid
+  delivery is persisted and audited once; an identical sequential or concurrent
+  delivery returns success without another downstream effect. Reusing the ID
+  with different raw content fails closed as a conflict.
+- Only fields accepted by the external event schema are copied into strict
+  internal domain contracts. Raw bodies, customer contact details, signatures,
+  secrets, stack traces, and database details are never returned or copied into
+  the audit log.
+- Request bodies are capped at 256 KiB. Responses contain only a stable status
+  and safe result code and are marked `no-store`.
+
+The header names and raw-body algorithm come from Razorpay's official
+[Validate and Test Webhooks](https://razorpay.com/docs/webhooks/validate-test/)
+documentation. To enable the boundary locally, provide a non-public server
+environment value:
+
+```bash
+RAZORPAY_WEBHOOK_SECRET=replace_with_test_webhook_secret
+```
+
+Do not commit that value. This milestone accepts and audits verified events but
+deliberately creates no recovery case, action, customer contact, or Payment
+Link from them. Out-of-order handling, latest-state fetch, late-success logic,
+and safe handoff into recovery belong to Milestone 11. This prevents a stale
+webhook snapshot from acquiring financial authority.
+
+Prototype limitations remain explicit: the atomic event claim and the
+tamper-evident audit append are two local operations, not one cross-component
+transaction. A process failure between them requires operator repair rather
+than automatic replay of downstream effects. The route also does not yet add
+deployment rate limiting, webhook-secret rotation, multi-node database
+coordination, out-of-order reconciliation, or live Razorpay Test Mode API
+calls.
 
 ## Local database and migrations
 
@@ -211,7 +260,7 @@ Safety proof:
 
 The POST controls under `/api/demo/recovery/` require a strict empty JSON object and are rejected when `APP_MODE` is not `demo`. They are internal demo controls, not merchant APIs or webhook endpoints. Repeated start, completion, and unsafe-probe requests resume from validated persisted state and do not duplicate the logical action, link, paid event, recommendation, policy decision, contact count, or final transition.
 
-Milestone 9 deliberately bypasses the external webhook trust boundary: the events are created inside the application as trusted synthetic fixtures and remain visibly labelled `NOT_CHECKED`. Raw-body HMAC verification and secure provider delivery deduplication belong to Milestone 10 and are not claimed here.
+The credential-free demo still bypasses the external webhook trust boundary by design: its events are created inside the application as trusted synthetic fixtures and remain visibly labelled `NOT_CHECKED`. They never masquerade as events accepted through the signature-verified public route.
 
 ## Verification
 
@@ -243,6 +292,8 @@ npm run check
 - Interactive Cases workspace with one complete persisted recovery flow
 - Recovered terminal stopping and an exact 10× money-integrity safety proof
 - Dashboard-safe read models with no customer hash, public link URL, secrets, raw payload, or audit hashes
+- Separate raw-body-verified Razorpay-style webhook route with durable sequential and concurrent event deduplication
+- Privacy-minimized first-seen webhook audit effect and safe deterministic HTTP responses
 - Restrained placeholders for later milestone routes
 - Reusable card, badge, table, layout, color, and chart foundations
 
@@ -261,7 +312,7 @@ The domain layer currently defines:
 - A deliberately separate Razorpay-style external payload boundary
 - Passive signature-verification and duplicate-processing result shapes
 
-The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer, policy firewall, audit hash chain, mock recovery executor, persisted orchestration, and first vertical-slice UI are implemented. External webhook security, provider-event reconciliation, held-out evaluation, and the complete dashboard remain deferred to their approved milestones.
+The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer, policy firewall, audit hash chain, mock recovery executor, persisted orchestration, first vertical-slice UI, and secure public webhook ingestion boundary are implemented. Provider-event reconciliation, held-out evaluation, and the complete dashboard remain deferred to their approved milestones.
 
 ## Canonical project documents
 

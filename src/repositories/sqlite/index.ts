@@ -235,6 +235,31 @@ function sameCanonical(left: unknown, right: unknown): boolean {
   return canonicalizeJson(left) === canonicalizeJson(right);
 }
 
+function comparableWebhookEvent(event: PersistedWebhookEvent["event"]) {
+  const comparable: Record<string, unknown> = { ...event };
+  delete comparable.receivedAt;
+  delete comparable.duplicateProcessing;
+  // The strict domain schemas permit optional keys to be present with an
+  // undefined value, while persisted JSON necessarily omits them. Remove only
+  // those representation-only values before semantic replay comparison.
+  return JSON.parse(JSON.stringify(comparable)) as unknown;
+}
+
+function sameWebhookDelivery(
+  expected: WebhookEventClaim,
+  existing: PersistedWebhookEvent,
+): boolean {
+  return (
+    expected.internalEventId === existing.internalEventId &&
+    expected.providerEventId === existing.providerEventId &&
+    expected.payloadDigest === existing.payloadDigest &&
+    sameCanonical(
+      comparableWebhookEvent(expected.event),
+      comparableWebhookEvent(existing.event),
+    )
+  );
+}
+
 function sameCaseIdentity(
   expected: RecoveryCaseRecord,
   existing: RecoveryCaseRecord,
@@ -294,9 +319,15 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
         );
       }
 
+      const event = toPersistedWebhookEvent(row);
       return {
-        status: result.changes === 1 ? "FIRST_SEEN" : "DUPLICATE",
-        event: toPersistedWebhookEvent(row),
+        status:
+          result.changes === 1
+            ? "FIRST_SEEN"
+            : sameWebhookDelivery(input, event)
+              ? "DUPLICATE"
+              : "CONFLICT",
+        event,
       };
     },
 

@@ -25,7 +25,13 @@ export type DuplicateWebhookClaim = {
   event: PersistedWebhookEvent;
 };
 
-export type WebhookClaimResult = FirstSeenWebhookClaim | DuplicateWebhookClaim;
+export type ConflictingWebhookClaim = {
+  status: "CONFLICT";
+  event: PersistedWebhookEvent;
+};
+
+export type WebhookClaimResult =
+  FirstSeenWebhookClaim | DuplicateWebhookClaim | ConflictingWebhookClaim;
 
 export interface WebhookEventRepository {
   claim(input: WebhookEventClaim): WebhookClaimResult;

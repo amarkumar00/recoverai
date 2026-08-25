@@ -72,7 +72,9 @@ describe("Milestone 9 cases UI", () => {
       "Every money value and outcome shown here is simulated",
     );
     expect(html).toContain("Signature verification: NOT_CHECKED");
-    expect(html).toContain("No public webhook exists");
+    expect(html).toContain(
+      "remain separate from the signature-verified public webhook boundary",
+    );
     expect(html).toContain("Start bounded recovery");
     expect(html).toContain("Run fixed 10× safety probe");
   });

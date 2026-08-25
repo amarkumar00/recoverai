@@ -231,7 +231,7 @@ describe("SQLite repositories", () => {
     }
   });
 
-  it("atomically distinguishes first-seen and competing duplicate webhook claims", () => {
+  it("atomically distinguishes first-seen and identical duplicate webhook claims", () => {
     const { database: firstDatabase, path } = openMigratedDatabase();
     const secondDatabase = createLocalDatabase(path);
     const firstRepositories = createSqliteRepositories(firstDatabase);
@@ -243,7 +243,7 @@ describe("SQLite repositories", () => {
           makeWebhookClaim("provider_competing_001", "event_competing_001"),
         ),
         secondRepositories.webhookEvents.claim(
-          makeWebhookClaim("provider_competing_001", "event_competing_002"),
+          makeWebhookClaim("provider_competing_001", "event_competing_001"),
         ),
       ];
 
@@ -260,6 +260,26 @@ describe("SQLite repositories", () => {
     } finally {
       secondDatabase.client.close();
       firstDatabase.client.close();
+    }
+  });
+
+  it("fails closed when a provider event ID is reused for conflicting content", () => {
+    const { database } = openMigratedDatabase();
+    const repositories = createSqliteRepositories(database);
+
+    try {
+      expect(
+        repositories.webhookEvents.claim(
+          makeWebhookClaim("provider_conflict_001", "event_conflict_001"),
+        ).status,
+      ).toBe("FIRST_SEEN");
+      expect(
+        repositories.webhookEvents.claim(
+          makeWebhookClaim("provider_conflict_001", "event_conflict_002"),
+        ).status,
+      ).toBe("CONFLICT");
+    } finally {
+      database.client.close();
     }
   });
 

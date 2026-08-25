@@ -295,3 +295,24 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** Judges need enough evidence to understand the full decision path without expanding the UI into a financial authority or leaking durable private and integrity material.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-25
+
+## ADR-043 — Public webhook verification owns the untouched request bytes
+
+- **Decision:** Verify `X-Razorpay-Signature` as HMAC-SHA256 over the exact raw request bytes with a server-only optional webhook secret and timing-safe digest comparison. Perform no JSON parsing, persistence, downstream processing, or audit append until verification succeeds. Return only fixed privacy-safe HTTP result codes.
+- **Reason:** Parsing or re-serializing JSON changes the signed message, while broad error output can leak provider data, credentials, stack traces, or storage details. Keeping the secret optional preserves credential-free Demo Mode and makes the unconfigured public route fail safely.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26
+
+## ADR-044 — Provider event ID is the atomic delivery and conflict boundary
+
+- **Decision:** Use the documented `x-razorpay-event-id` header as the unique SQLite claim. Exact raw-body SHA-256 digest plus normalized semantic identity distinguishes an identical replay from conflicting content. Only the transactionally first-seen claim may cross the downstream processor gate; duplicates return success with no new effect and conflicts fail closed.
+- **Reason:** Sequential checks cannot arbitrate concurrent deliveries. A database uniqueness constraint plus conflict-aware claim makes two independent processes converge to one persisted event and prevents repeated case, recovery, action, Payment Link, or audit effects.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26
+
+## ADR-045 — Verified ingestion does not yet authorize recovery
+
+- **Decision:** Milestone 10 persists and privacy-safely audits one normalized verified event, but creates no case, recovery action, customer contact, or Payment Link from the public route. The fixed internal demo remains a visibly separate trusted synthetic path with signature status `NOT_CHECKED`.
+- **Reason:** A webhook payload is an asynchronous snapshot, not trusted current payment state. Milestone 11 must add out-of-order handling and current-state reconciliation before a verified provider event can safely enter financial recovery orchestration.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26
