@@ -65,6 +65,8 @@ const safeAiRecommendationSchema = z
 
 const safePolicySchema = z
   .object({
+    proposedAction: recoveryActionSchema,
+    finalAction: recoveryActionSchema.nullable(),
     outcome: policyOutcomeSchema,
     primaryRule: z.string().min(1).max(64),
     reason: boundedReasonSchema,
@@ -109,6 +111,23 @@ export const demoCaseReadModelSchema = z
     currency: currencyCodeSchema,
     currentCaseState: recoveryCaseStateSchema.nullable(),
     latestPaymentState: normalizedPaymentStatusSchema.nullable(),
+    currentFetchedPaymentState: normalizedPaymentStatusSchema.nullable(),
+    downtimeContext: z
+      .object({
+        availability: z.enum(["AVAILABLE", "UNAVAILABLE"]),
+        active: z.boolean().nullable(),
+        explanation: boundedReasonSchema,
+      })
+      .strict(),
+    paymentTimeline: z.array(
+      z
+        .object({
+          observedAt: canonicalTimestampSchema,
+          origin: z.enum(["WEBHOOK_EVIDENCE", "PROVIDER_RECONCILED"]),
+          status: normalizedPaymentStatusSchema,
+        })
+        .strict(),
+    ),
     diagnosis: safeDiagnosisSchema.optional(),
     aiRecommendation: safeAiRecommendationSchema.optional(),
     expectedValueBreakdown: z.array(actionScoreBreakdownSchema).max(6),
@@ -123,6 +142,8 @@ export const demoCaseReadModelSchema = z
       .optional(),
     paymentLink: safeLinkSchema.optional(),
     customerContactCount: nonnegativeCountSchema,
+    finalSimulatedOutcome: z.string().trim().min(1).max(200),
+    recoveryStoppedAfterPaymentSuccess: z.boolean(),
     timeline: z.array(safeTimelineEntrySchema).max(100),
     auditVerification: z.discriminatedUnion("status", [
       z

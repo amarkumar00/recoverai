@@ -1,14 +1,11 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { connection } from "next/server";
+
+import { PolicyFirewallPage } from "@/components/policy/policy-firewall-page";
+import { demoRuntime } from "@/orchestration/runtime";
 
 export const metadata = { title: "Policy Firewall" };
 
-export default function PolicyPage() {
-  return (
-    <ComingSoon
-      description="A future evidence view for deterministic safety decisions and hard stopping rules."
-      eyebrow="Financial safety"
-      milestone="Milestone 6"
-      title="Policy Firewall"
-    />
-  );
+export default async function PolicyPage() {
+  await connection();
+  return <PolicyFirewallPage model={demoRuntime().dashboard.policy()} />;
 }

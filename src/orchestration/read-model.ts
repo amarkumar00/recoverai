@@ -79,6 +79,17 @@ export class DemoReadModelService {
     const snapshot = this.#repositories.paymentSnapshots.findLatestByPaymentId(
       scenario.paymentId,
     );
+    const reconciled =
+      this.#repositories.paymentSnapshots.findLatestReconciledByPaymentId(
+        scenario.paymentId,
+      );
+    const paymentTimeline = this.#repositories.paymentSnapshots
+      .listByPaymentId(scenario.paymentId)
+      .map((item) => ({
+        observedAt: item.observedAt,
+        origin: item.origin,
+        status: item.snapshot.status,
+      }));
     const recommendations = this.#repositories.aiRecommendations.listByCaseId(
       scenario.caseId,
     );
@@ -139,6 +150,14 @@ export class DemoReadModelService {
       currency: scenario.currency,
       currentCaseState: recoveryCase?.state ?? null,
       latestPaymentState: snapshot?.snapshot.status ?? null,
+      currentFetchedPaymentState: reconciled?.snapshot.status ?? null,
+      downtimeContext: {
+        availability: "AVAILABLE",
+        active: false,
+        explanation:
+          "The deterministic mock dependency reports no active downtime for this fixture.",
+      },
+      paymentTimeline,
       ...(diagnosis === undefined
         ? {}
         : {
@@ -167,6 +186,8 @@ export class DemoReadModelService {
         ? {}
         : {
             policy: {
+              proposedAction: decision.proposedAction,
+              finalAction: decision.finalAction ?? null,
               outcome: decision.outcome,
               primaryRule: decision.ruleId,
               reason: decision.reason,
@@ -197,6 +218,15 @@ export class DemoReadModelService {
             },
           }),
       customerContactCount: recoveryCase?.contactCount ?? 0,
+      finalSimulatedOutcome:
+        recoveryCase?.state === "RECOVERED"
+          ? "Simulated recovery completed; all further recovery is stopped."
+          : recoveryCase?.state === "ESCALATED"
+            ? "Simulated case escalated safely with no financial execution."
+            : "Simulated outcome is not yet terminal.",
+      recoveryStoppedAfterPaymentSuccess:
+        recoveryCase?.state === "RECOVERED" ||
+        recoveryCase?.state === "STOPPED",
       timeline,
       auditVerification:
         verification.status === "VALID"

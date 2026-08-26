@@ -2,6 +2,8 @@ import "server-only";
 
 import { DeterministicMockRazorpayAdapter } from "@/adapters/razorpay";
 import { createSqliteAuditChain } from "@/audit";
+import { DashboardReadModelService } from "@/dashboard/read-model";
+import { DemoScenarioStore } from "@/dashboard/scenario-store";
 import { createLocalDatabase } from "@/lib/db/client";
 import { DemoReadModelService } from "@/orchestration/read-model";
 import { RecoverAiDemoOrchestrator } from "@/orchestration/recovery-orchestrator";
@@ -38,6 +40,12 @@ function createRuntime() {
     audit,
     orchestrator,
   });
+  const scenarios = new DemoScenarioStore(database);
+  const dashboard = new DashboardReadModelService({
+    database,
+    audit,
+    scenarios,
+  });
   return {
     database,
     repositories,
@@ -46,6 +54,8 @@ function createRuntime() {
     readModel,
     webhookIngestor,
     reconciler,
+    scenarios,
+    dashboard,
   };
 }
 

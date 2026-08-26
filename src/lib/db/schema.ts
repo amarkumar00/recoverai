@@ -42,6 +42,15 @@ export const PAYMENT_LINK_STATUSES = [
   "FAILED_SAFE",
 ] as const;
 
+export const DEMO_SCENARIO_KEYS = [
+  "DUPLICATE_DELIVERY",
+  "OUT_OF_ORDER",
+  "LATE_SUCCESS",
+  "INVALID_AI_AMOUNT",
+  "AI_TIMEOUT",
+  "DOWNTIME_FAILURE",
+] as const;
+
 export const webhookEvents = sqliteTable(
   "webhook_events",
   {
@@ -494,6 +503,23 @@ export const evaluationRuns = sqliteTable(
   ],
 );
 
+export const demoScenarioRuns = sqliteTable(
+  "demo_scenario_runs",
+  {
+    scenarioKey: text("scenario_key", {
+      enum: DEMO_SCENARIO_KEYS,
+    }).primaryKey(),
+    resultJson: text("result_json").notNull(),
+    completedAt: text("completed_at").notNull(),
+  },
+  (table) => [
+    check(
+      "demo_scenario_runs_key_check",
+      sql`${table.scenarioKey} IN ('DUPLICATE_DELIVERY','OUT_OF_ORDER','LATE_SUCCESS','INVALID_AI_AMOUNT','AI_TIMEOUT','DOWNTIME_FAILURE')`,
+    ),
+  ],
+);
+
 export const recoverAiSchema = {
   webhookEvents,
   paymentSnapshots,
@@ -505,4 +531,5 @@ export const recoverAiSchema = {
   auditEntries,
   auditChainState,
   evaluationRuns,
+  demoScenarioRuns,
 };

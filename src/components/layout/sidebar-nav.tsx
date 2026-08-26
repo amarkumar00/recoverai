@@ -12,31 +12,27 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const items = [
-  { href: "/", label: "Overview", icon: Gauge, available: true },
+  { href: "/", label: "Overview", icon: Gauge },
   {
     href: "/events",
     label: "Live Event Stream",
     icon: Activity,
-    available: false,
   },
-  { href: "/cases", label: "Cases", icon: ListChecks, available: true },
+  { href: "/cases", label: "Cases", icon: ListChecks },
   {
     href: "/policy",
     label: "Policy Firewall",
     icon: ShieldCheck,
-    available: false,
   },
   {
     href: "/audit",
     label: "Audit Trail",
     icon: FileClock,
-    available: false,
   },
   {
     href: "/evaluation",
     label: "Digital Twin Evaluation",
     icon: ChartNoAxesCombined,
-    available: false,
   },
 ] as const;
 
@@ -61,7 +57,6 @@ export function SidebarNav() {
           >
             <Icon aria-hidden="true" size={18} strokeWidth={1.8} />
             <span>{item.label}</span>
-            {!item.available && <span className="nav-later">Later</span>}
           </Link>
         );
       })}

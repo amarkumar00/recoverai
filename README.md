@@ -2,7 +2,7 @@
 
 RecoverAI is a credential-free prototype for **Track 03 — AI Revenue Recovery** in the Razorpay AI Buildathon 2026. It explores how failed-payment events can become explainable, bounded recovery actions while measuring incremental **simulated** recovery across synthetic cases.
 
-> The current build connects those foundations into one persisted, credential-free vertical slice and a separate Razorpay-style public webhook boundary. The public boundary verifies HMAC-SHA256 against the exact raw request bytes, durably suppresses duplicate provider event IDs, and sends only the verified first delivery to current-state reconciliation. The default provider is still a deterministic mock; it does not call Razorpay, send a customer message, or move real money. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
+> The current build provides a complete judge-facing dashboard, one persisted credential-free vertical slice, six fixed interactive safety scenarios, and a separate Razorpay-style public webhook boundary. The default provider is still a deterministic mock; it does not call Razorpay, send a customer message, or move real money. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
 
 ## Requirements
 
@@ -34,7 +34,26 @@ npm run db:migrate
 npm run dev
 ```
 
-Open [http://localhost:3000/cases](http://localhost:3000/cases).
+Open [http://localhost:3000](http://localhost:3000). The six product surfaces are:
+
+- `/` — validated golden-report overview
+- `/events` — privacy-safe event and reconciliation stream
+- `/cases` — persisted vertical slice plus six deterministic safety scenarios
+- `/policy` — read-only active limits and decision evidence
+- `/audit` — verified tamper-evident hash chain
+- `/evaluation` — full held-out report, grouped results, 7×7 matrix, and honest exceptions
+
+### Five-minute deterministic demo
+
+1. Start the primary bounded recovery in **Cases**, inspect its diagnosis, AI ranking, expected value, ordered policy checks, mock link, and tamper-evident audit evidence, then simulate the mock link being paid.
+2. Run the six fixed scenario cards: duplicate delivery, out-of-order events, late success, invalid 10× AI amount, AI timeout, and downtime dependency unavailable.
+3. Open **Live Event Stream** to compare webhook snapshot order with authoritative current payment state.
+4. Open **Policy Firewall** and **Audit Trail** to show why the action was allowed, blocked, stopped, or escalated.
+5. Open **Digital Twin Evaluation** to show the complete locked 100-case simulated result, including 43 unresolved/escalated outcomes and false-positive simulated cost.
+
+The scenario route accepts only one of six server-owned keys. It accepts no amount, action, event ID, payload, provider route, or customer field. The reset route requires the exact fixed confirmation token and works only in Demo Mode.
+
+Reset deletes only allowlisted demo operational fixtures and stored scenario projections in one SQLite transaction. It deliberately preserves the tamper-evident audit chain instead of rewriting history. Identical deterministic audit entry IDs replay safely when a reset fixture is run again. Unknown database records, migrations, user files, evaluation runs, the golden report, and the locked fingerprint are untouched.
 
 The environment file is optional because safe defaults are built in:
 
@@ -121,7 +140,7 @@ SQLite connections enforce foreign keys, use a five-second busy timeout, and ena
 
 ### Persistence boundaries
 
-The storage layer contains nine record families plus one audit-chain head anchor: webhook events, payment snapshots, recovery cases, AI recommendations, policy decisions, recovery actions, Payment Links, audit entries, simulated evaluation runs, and `audit_chain_state`. Repository interfaces live under `src/repositories/` and have no React, Next.js route, or UI dependency.
+The storage layer contains ten record families plus one audit-chain head anchor: webhook events, payment snapshots, recovery cases, AI recommendations, policy decisions, recovery actions, Payment Links, audit entries, simulated evaluation runs, fixed demo-scenario results, and `audit_chain_state`. Repository interfaces live under `src/repositories/` and have no React, Next.js route, or UI dependency.
 
 Database rows intentionally use SQLite-friendly representations:
 

@@ -1,14 +1,11 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { connection } from "next/server";
+
+import { EventStream } from "@/components/events/event-stream";
+import { demoRuntime } from "@/orchestration/runtime";
 
 export const metadata = { title: "Live Event Stream" };
 
-export default function EventsPage() {
-  return (
-    <ComingSoon
-      description="A future operational view for verified, deduplicated, and reconciled payment events."
-      eyebrow="Operational visibility"
-      milestone="Milestones 10–14"
-      title="Live Event Stream"
-    />
-  );
+export default async function EventsPage() {
+  await connection();
+  return <EventStream initialModel={demoRuntime().dashboard.eventStream()} />;
 }

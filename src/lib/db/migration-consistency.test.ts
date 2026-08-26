@@ -20,6 +20,7 @@ const REQUIRED_TABLES = [
   "audit_entries",
   "audit_chain_state",
   "evaluation_runs",
+  "demo_scenario_runs",
 ] as const;
 
 const IMPORTANT_INDEXES = [
@@ -70,7 +71,7 @@ describe("committed database migrations", () => {
       const migrationCount = database.client
         .prepare("SELECT count(*) AS count FROM __drizzle_migrations")
         .get() as { count: number };
-      expect(migrationCount.count).toBe(3);
+      expect(migrationCount.count).toBe(4);
     } finally {
       database.client.close();
     }

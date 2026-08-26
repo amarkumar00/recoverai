@@ -372,3 +372,17 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** This prevents hidden-outcome leakage, duplicate revenue/contact counting, floating-point money drift, wall-clock instability, hard-coded favorable totals, and conflicting replay records while preserving unfavorable or unresolved results honestly.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-26
+
+## ADR-054 — Dashboard data crosses narrow validated server-owned read boundaries
+
+- **Decision:** Render the six judge-facing product surfaces from strict privacy-minimized read models. Load and validate the committed golden report on the server, require its dataset fingerprint to equal the versioned held-out lock, and never import evaluator-only hidden outcomes into dashboard or component modules. Keep only event filtering and fixed demo controls as client islands.
+- **Reason:** The dashboard must explain evidence without becoming a second policy, scoring, reconciliation, or financial-execution implementation. Server validation prevents browser recomputation or selective metric drift, while narrow DTOs avoid exposing raw payloads, secrets, PII, provider errors, stack traces, prompts, or hidden outcomes.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26
+
+## ADR-055 — Exact demo reset preserves audit history and scopes deletion to allowlisted fixtures
+
+- **Decision:** Persist only the six fixed scenario result projections in `demo_scenario_runs`. The reset endpoint is Demo-Mode-only, requires one exact confirmation token, accepts no identifiers or table names, and transactionally removes the scenario rows plus only the two known vertical-slice fixture families by explicit server-owned IDs. Preserve audit entries and the chain checkpoint; deterministic fixture audit entry IDs replay idempotently after reset. Never touch unknown rows, evaluation runs, migrations, files, the golden report, or the locked fingerprint.
+- **Reason:** Deleting audit history would make the reset appear exact by silently weakening the tamper-evident claim. Preserving the chain is the safer explicit tradeoff: operational scenario readiness is reproducible, while prior audited demo actions remain historically detectable. The reset transaction itself is represented by its deterministic HTTP result and is not appended as a new audit event in this local prototype.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26

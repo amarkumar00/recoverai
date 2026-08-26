@@ -22,6 +22,13 @@
       "when": 1787760000000,
       "tag": "0002_reconciled_payment_authority",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787846400000,
+      "tag": "0003_demo_scenario_state",
+      "breakpoints": true
     }
   ]
 }

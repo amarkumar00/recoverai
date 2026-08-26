@@ -1,33 +1,45 @@
 import type { CSSProperties } from "react";
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { overviewFixture } from "@/lib/fixtures/overview";
+import type { SimulatedEvaluationResult } from "@/domain/evaluation";
 
-export function FailureDistribution() {
+const tones = [
+  "blue",
+  "amber",
+  "violet",
+  "green",
+  "red",
+  "orange",
+  "blue",
+] as const;
+export function FailureDistribution({
+  result,
+}: {
+  result: SimulatedEvaluationResult;
+}) {
   return (
     <Card>
       <CardHeader>
         <div>
-          <p className="eyebrow">Digital Twin preview</p>
+          <p className="eyebrow">Digital Twin</p>
           <h2>Failure-class distribution</h2>
         </div>
         <span className="chart-context">Synthetic</span>
       </CardHeader>
       <CardContent>
         <div className="distribution-list">
-          {overviewFixture.failureClasses.map((item) => (
-            <div className="distribution-row" key={item.label}>
+          {result.resultsByFailureClass.map((item, index) => (
+            <div className="distribution-row" key={item.failureClass}>
               <div className="distribution-label">
-                <span>{item.label}</span>
-                <strong>{item.count}</strong>
+                <span>{item.failureClass.replaceAll("_", " ")}</span>
+                <strong>{item.uniqueCaseCount}</strong>
               </div>
               <div className="distribution-track">
                 <span
                   className="distribution-fill"
-                  data-tone={item.tone}
+                  data-tone={tones[index]}
                   style={
                     {
-                      "--distribution-size": `${item.count * 4}%`,
+                      "--distribution-size": `${item.uniqueCaseCount * 4}%`,
                     } as CSSProperties
                   }
                 />

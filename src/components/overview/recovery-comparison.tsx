@@ -1,9 +1,32 @@
 import type { CSSProperties } from "react";
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { overviewFixture } from "@/lib/fixtures/overview";
+import type { SimulatedEvaluationResult } from "@/domain/evaluation";
+import { formatInrFromPaise } from "@/lib/currency";
 
-export function RecoveryComparison() {
+export function RecoveryComparison({
+  result,
+}: {
+  result: SimulatedEvaluationResult;
+}) {
+  const comparison = [
+    {
+      label: "Generic baseline",
+      value: formatInrFromPaise(
+        result.baselineSimulatedRecovery.amountSubunits,
+      ),
+      percent:
+        (result.baselineRecoveredCaseCount / result.uniqueCaseCount) * 100,
+      tone: "baseline",
+    },
+    {
+      label: "RecoverAI",
+      value: formatInrFromPaise(
+        result.recoverAiSimulatedRecovery.amountSubunits,
+      ),
+      percent: result.simulatedRecoveryRate * 100,
+      tone: "recoverai",
+    },
+  ] as const;
   return (
     <Card className="comparison-card">
       <CardHeader>
@@ -15,14 +38,14 @@ export function RecoveryComparison() {
       </CardHeader>
       <CardContent>
         <div className="comparison-bars">
-          {overviewFixture.comparison.map((item) => (
+          {comparison.map((item) => (
             <div className="comparison-row" key={item.label}>
               <div className="comparison-label">
                 <span>{item.label}</span>
                 <strong>{item.value}</strong>
               </div>
               <div
-                aria-label={`${item.label}: ${item.percent}%`}
+                aria-label={`${item.label}: ${item.percent}% simulated recovery`}
                 aria-valuemax={100}
                 aria-valuemin={0}
                 aria-valuenow={item.percent}
@@ -43,7 +66,12 @@ export function RecoveryComparison() {
         </div>
         <div className="increment-callout">
           <span>Incremental simulated recovery</span>
-          <strong>+₹1,19,250</strong>
+          <strong>
+            +
+            {formatInrFromPaise(
+              result.incrementalSimulatedRecovery.subunitDelta,
+            )}
+          </strong>
           <p>RecoverAI minus the documented generic baseline.</p>
         </div>
       </CardContent>

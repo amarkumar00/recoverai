@@ -1,14 +1,11 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { connection } from "next/server";
 
-export const metadata = { title: "Audit Trail" };
+import { AuditTrailPage } from "@/components/audit/audit-trail-page";
+import { demoRuntime } from "@/orchestration/runtime";
 
-export default function AuditPage() {
-  return (
-    <ComingSoon
-      description="A future tamper-evident record of material events, recommendations, decisions, and outcomes."
-      eyebrow="Explainability"
-      milestone="Milestone 7"
-      title="Audit Trail"
-    />
-  );
+export const metadata = { title: "Tamper-Evident Audit Trail" };
+
+export default async function AuditPage() {
+  await connection();
+  return <AuditTrailPage model={demoRuntime().dashboard.audit()} />;
 }

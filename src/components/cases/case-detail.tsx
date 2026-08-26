@@ -85,6 +85,10 @@ export function CaseDetail({
               <dd>{model.latestPaymentState ?? "Not observed"}</dd>
             </div>
             <div>
+              <dt>Fetched current state</dt>
+              <dd>{model.currentFetchedPaymentState ?? "Not fetched"}</dd>
+            </div>
+            <div>
               <dt>Case state</dt>
               <dd>{model.currentCaseState ?? "Not started"}</dd>
             </div>
@@ -93,6 +97,30 @@ export function CaseDetail({
               <dd>{model.customerContactCount}</dd>
             </div>
           </dl>
+          <div className="bounded-context">
+            <strong>
+              Downtime context: {model.downtimeContext.availability}
+            </strong>
+            <span>
+              {model.downtimeContext.active === null
+                ? "Not inferred"
+                : model.downtimeContext.active
+                  ? "Active"
+                  : "Inactive"}
+            </span>
+            <p>{model.downtimeContext.explanation}</p>
+          </div>
+          {model.paymentTimeline.length > 0 && (
+            <ol className="payment-mini-timeline">
+              {model.paymentTimeline.map((item, index) => (
+                <li key={`${item.observedAt}:${index}`}>
+                  <time>{item.observedAt.slice(11, 19)} UTC</time>
+                  <strong>{item.status}</strong>
+                  <span>{item.origin.replaceAll("_", " ")}</span>
+                </li>
+              ))}
+            </ol>
+          )}
         </article>
 
         <article className="surface-card detail-card">
@@ -169,6 +197,16 @@ export function CaseDetail({
                 <strong>{model.policy.primaryRule}</strong>
               </div>
               <p>{model.policy.reason}</p>
+              <dl className="proposal-final">
+                <div>
+                  <dt>AI proposed</dt>
+                  <dd>{model.policy.proposedAction}</dd>
+                </div>
+                <div>
+                  <dt>Firewall final</dt>
+                  <dd>{model.policy.finalAction ?? "NO ACTION"}</dd>
+                </div>
+              </dl>
               <div className="check-list">
                 {model.policy.checks.map((check) => (
                   <div key={check.ruleId} data-status={check.status}>
@@ -266,6 +304,25 @@ export function CaseDetail({
           </div>
         </section>
       )}
+
+      <section
+        className="surface-card final-outcome-card"
+        aria-labelledby="final-outcome-heading"
+      >
+        <div>
+          <p className="eyebrow">Final simulated outcome</p>
+          <h2 id="final-outcome-heading">{model.finalSimulatedOutcome}</h2>
+        </div>
+        <Badge
+          tone={
+            model.recoveryStoppedAfterPaymentSuccess ? "positive" : "neutral"
+          }
+        >
+          {model.recoveryStoppedAfterPaymentSuccess
+            ? "RECOVERY STOPPED"
+            : "NOT TERMINAL"}
+        </Badge>
+      </section>
 
       <section className="surface-card timeline-card">
         <div className="detail-card-title">

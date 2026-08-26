@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 14
-- **Last completed milestone:** Milestone 13 — Baseline, RecoverAI Evaluation and Metrics
-- **Next proposed milestone:** Milestone 14 — Complete Merchant Dashboard and Interactive Demo Scenarios
+- **Current milestone:** None — awaiting approval to begin Milestone 15
+- **Last completed milestone:** Milestone 14 — Complete Merchant Dashboard and Interactive Demo Scenarios
+- **Next proposed milestone:** Milestone 15 — Optional Razorpay Test Mode Adapter
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -200,7 +200,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 14 — Complete Merchant Dashboard and Interactive Demo Scenarios
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** All required product surfaces and judge-facing scenarios are usable.
 - **Dependencies:** Milestones 9–13.
 - **Acceptance criteria:**

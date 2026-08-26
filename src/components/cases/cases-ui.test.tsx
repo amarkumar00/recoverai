@@ -28,8 +28,17 @@ function model(overrides: Record<string, unknown> = {}): DemoCaseReadModel {
     currency: "INR",
     currentCaseState: null,
     latestPaymentState: null,
+    currentFetchedPaymentState: null,
+    downtimeContext: {
+      availability: "AVAILABLE",
+      active: false,
+      explanation: "No active synthetic downtime.",
+    },
+    paymentTimeline: [],
     expectedValueBreakdown: [],
     customerContactCount: 0,
+    finalSimulatedOutcome: "Simulated outcome is not yet terminal.",
+    recoveryStoppedAfterPaymentSuccess: false,
     timeline: [],
     auditVerification: { status: "VALID", entryCount: 0 },
     workflowStage: "NOT_STARTED",
@@ -147,5 +156,102 @@ describe("Milestone 9 cases UI", () => {
     expect(unsafe).toContain("No action executed");
     expect(unsafe).toContain("INTENT_MONEY_INTEGRITY");
     expect(unsafe).not.toContain("publicUrl");
+  });
+
+  it("renders payment evidence, AI ranking, expected value, and ordered policy checks", () => {
+    const html = renderToStaticMarkup(
+      <CaseDetail
+        initialModel={model({
+          currentCaseState: "LINK_CREATED",
+          latestPaymentState: "FAILED",
+          currentFetchedPaymentState: "FAILED",
+          downtimeContext: {
+            availability: "AVAILABLE",
+            active: false,
+            explanation: "No active synthetic downtime was found.",
+          },
+          paymentTimeline: [
+            {
+              observedAt: "2026-08-25T08:00:00.000Z",
+              origin: "WEBHOOK_EVIDENCE",
+              status: "FAILED",
+            },
+            {
+              observedAt: "2026-08-25T08:00:01.000Z",
+              origin: "PROVIDER_RECONCILED",
+              status: "FAILED",
+            },
+          ],
+          diagnosis: {
+            failureClass: "INSUFFICIENT_FUNDS",
+            reason: "Known failure evidence supports bounded recovery.",
+            evidence: [
+              {
+                code: "KNOWN_ERROR_CODE",
+                detail: "A mapped synthetic failure code was observed.",
+              },
+            ],
+          },
+          aiRecommendation: {
+            selectedAction: "SEND_PAYMENT_LINK",
+            confidence: 0.84,
+            rankedActions: [
+              {
+                rank: 1,
+                action: "SEND_PAYMENT_LINK",
+                recoveryProbability: 0.65,
+                reason: "Highest positive simulated expected value.",
+              },
+            ],
+          },
+          expectedValueBreakdown: [
+            {
+              action: "SEND_PAYMENT_LINK",
+              recoveryProbabilityMillionths: 650_000,
+              expectedRecoveredSubunits: 97_435,
+              contactCostSubunits: 100,
+              frictionPenaltySubunits: 200,
+              duplicatePaymentRiskPenaltySubunits: 0,
+              operationalCostSubunits: 50,
+              totalPenaltySubunits: 350,
+              expectedValueSubunits: 97_085,
+              currency: "INR",
+            },
+          ],
+          policy: {
+            proposedAction: "SEND_PAYMENT_LINK",
+            finalAction: "SEND_PAYMENT_LINK",
+            outcome: "APPROVED",
+            primaryRule: "ALL_GUARDRAILS_PASSED",
+            reason: "Every deterministic financial guardrail passed.",
+            checks: [
+              {
+                ruleId: "INTENT_MONEY_INTEGRITY",
+                status: "PASSED",
+                reason: "Amount and currency match trusted context.",
+              },
+              {
+                ruleId: "ALL_GUARDRAILS_PASSED",
+                status: "PASSED",
+                reason: "The allowlisted action may proceed once.",
+              },
+            ],
+          },
+          finalSimulatedOutcome:
+            "Mock Payment Link created; simulated payment remains unpaid.",
+        })}
+      />,
+    );
+
+    expect(html).toContain("Fetched current state");
+    expect(html).toContain("PROVIDER RECONCILED");
+    expect(html).toContain("KNOWN_ERROR_CODE");
+    expect(html).toContain("84% confidence");
+    expect(html).toContain("Simulated expected-value calculation");
+    expect(html).toContain("AI proposed");
+    expect(html).toContain("Firewall final");
+    expect(html).toContain("INTENT_MONEY_INTEGRITY");
+    expect(html).toContain("ALL_GUARDRAILS_PASSED");
+    expect(html).toContain("Mock Payment Link created");
   });
 });
