@@ -58,5 +58,31 @@ export default defineConfig([
       ],
     },
   },
+  {
+    files: [
+      "src/ai/**/*.ts",
+      "src/diagnosis/**/*.ts",
+      "src/policy/**/*.ts",
+      "src/recovery/**/*.ts",
+    ],
+    ignores: ["**/__tests__/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@/digital-twin/evaluator-only",
+                "@/digital-twin/internal-generator",
+              ],
+              message:
+                "Action selection and execution cannot import evaluator-only Digital Twin outcomes.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   globalIgnores([".next/**", "coverage/**", "data/**"]),
 ]);

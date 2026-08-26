@@ -300,6 +300,72 @@ The POST controls under `/api/demo/recovery/` require a strict empty JSON object
 
 The credential-free demo still bypasses the external webhook trust boundary by design: its events are created inside the application as trusted synthetic fixtures and remain visibly labelled `NOT_CHECKED`. They never masquerade as events accepted through the signature-verified public route.
 
+## Seeded Payment Failure Digital Twin
+
+`src/digital-twin/` provides a credential-free, database-independent synthetic
+dataset generator at version
+`recoverai-payment-failure-digital-twin-v1`. It never reads ambient time,
+unseeded randomness, network state, environment credentials, or machine-specific
+state.
+
+Two namespaces keep scorer development separate from evaluation:
+
+- Development seed `recoverai-development:2026-v1` produces 28 scorer-visible
+  synthetic cases for deterministic development and contract testing.
+- Held-out seed `recoverai-held-out:2026-v1` produces the locked 100-payment
+  evaluation batch. Its default full-batch SHA-256 fingerprint is
+  `2065d1d50588ac7b8e8cf0782e7ae647c59bc02fedc71b856ca7c6d49f96ecdb`.
+
+The held-out batch contains exactly:
+
+| Synthetic ground-truth class      | Cases |
+| --------------------------------- | ----: |
+| Downtime or transient             |    25 |
+| Insufficient funds                |    20 |
+| Customer-correctable              |    15 |
+| Network/integration uncertainty   |    15 |
+| Late-authorized or later-captured |    10 |
+| Hard/non-retryable                |    10 |
+| Ambiguous, requiring human review |     5 |
+
+Those 100 payments create 112 unique synthetic provider events and exactly 125
+deliveries: 5 sequential duplicates, 8 non-adjacent duplicates, and 12
+legitimate success events. The late-success group includes 4 late
+authorizations, 3 later captures, 2 captured-before-authorized delivery cases,
+and 1 stale-failure-after-current-capture case. Duplicate deliveries preserve
+the same provider event ID, normalized content, and content fingerprint;
+out-of-order events retain distinct provider event IDs and creation order.
+
+Every case validates through the existing strict payment, event, diagnosis,
+payment-satisfaction, money, identity, and timestamp contracts. Synthetic
+customer references visibly use the `synthetic-non-production:` namespace. No
+names, emails, phone numbers, addresses, card details, tokens, credentials,
+customer messages, raw signed request bodies, or real merchant data are
+generated.
+
+The public selection batch contains payment features and deterministic
+diagnosis only. Per-case ground-truth labels, allowed-action labels, and one
+hidden **simulated** outcome for each of the six canonical actions live behind
+an evaluator-only module. The existing provider schema remains strict, and
+lint plus leakage tests prevent AI, diagnosis, policy, and recovery modules
+from importing evaluator-only material. An outcome can be revealed only after
+a case ID and already-selected canonical action are supplied.
+
+The transparent outcome simulator uses a seeded SHA-256 threshold against
+fixed class/action assumptions. Its main simulated recovery probabilities are:
+downtime wait 82%; insufficient-funds method change 61% and link 47%;
+customer-correctable link 69% and method change 59%; network uncertainty wait
+47%. Individual held-out results remain hidden. Late-success, non-retryable,
+and ambiguous cases produce bounded simulated stop/escalation outcomes rather
+than synthetic recovery uplift. These handcrafted assumptions do not model
+Razorpay's production network or establish real revenue, accuracy, or expected
+production performance.
+
+Milestone 12 intentionally generates no baseline comparison, aggregate metric,
+incremental simulated revenue result, dashboard evaluation view, database
+record, webhook processing, recovery action, or Payment Link. Those evaluation
+calculations remain Milestone 13 work.
+
 ## Verification
 
 Run each check independently:
@@ -333,6 +399,8 @@ npm run check
 - Separate raw-body-verified Razorpay-style webhook route with durable sequential and concurrent event deduplication
 - Privacy-minimized first-seen webhook audit and current-state reconciliation effects with safe deterministic HTTP responses
 - Separate webhook-evidence and provider-reconciled histories, monotonic success authority, and late-success stopping
+- Versioned seeded development data and a locked 100-payment/125-delivery held-out Digital Twin
+- Evaluator-only hidden simulated outcomes with strict scorer leakage protection
 - Restrained placeholders for later milestone routes
 - Reusable card, badge, table, layout, color, and chart foundations
 
@@ -351,7 +419,7 @@ The domain layer currently defines:
 - A deliberately separate Razorpay-style external payload boundary
 - Passive signature-verification and duplicate-processing result shapes
 
-The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer, policy firewall, audit hash chain, mock recovery executor, persisted orchestration, first vertical-slice UI, secure public webhook ingestion, and provider-independent current-state reconciliation are implemented. Held-out evaluation and the complete dashboard remain deferred to their approved milestones.
+The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer, policy firewall, audit hash chain, mock recovery executor, persisted orchestration, first vertical-slice UI, secure public webhook ingestion, provider-independent current-state reconciliation, and held-out Digital Twin dataset are implemented. Baseline-versus-RecoverAI evaluation metrics and the complete dashboard remain deferred to their approved milestones.
 
 ## Canonical project documents
 

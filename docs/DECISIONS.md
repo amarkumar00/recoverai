@@ -337,3 +337,24 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** This safely completes the public handoff and exercises the fail-closed behavior without credentials, undocumented APIs, network access, or real-money authority. Live Test Mode lookup remains Milestone 15 work.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-26
+
+## ADR-049 — Development and held-out Digital Twin data use separate seeded namespaces
+
+- **Decision:** Version the Digital Twin as `recoverai-payment-failure-digital-twin-v1`; require `recoverai-development:` and `recoverai-held-out:` seed namespaces; generate without ambient time, unseeded randomness, credentials, network, database, or machine state; and lock the default 100-case held-out material with a SHA-256 fingerprint over both scorer-visible data and evaluator-only hidden simulated ground truth.
+- **Reason:** Separate namespaces prevent accidental development/evaluation overlap, while a versioned canonical full-material digest makes silent held-out changes detectable and keeps repeated judging runs logically identical.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26
+
+## ADR-050 — Held-out outcomes are evaluator-only and revealed after selection
+
+- **Decision:** Expose only strict scorer-visible payment context, event history, reconciliation context, and deterministic diagnosis through the normal Digital Twin generator. Keep per-case ground-truth failure class, ground-truth allowed actions, and six-action hidden simulated outcomes in an evaluator-only module whose API requires an already-selected canonical action. Do not re-export evaluator material from the normal Digital Twin index, and prohibit AI, diagnosis, policy, and recovery production modules from importing evaluator-only generator modules.
+- **Reason:** Structural separation, strict schemas, static import restrictions, and leakage tests prevent the action-selection pipeline from optimizing against held-out answers or turning ground truth into execution authority.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26
+
+## ADR-051 — Delivery overlays preserve logical event identity and creation order
+
+- **Decision:** Model the held-out set as 100 unique synthetic payments, 112 unique provider events, and 125 deliveries. A duplicate retains its provider event ID, normalized content, and signed-content fingerprint; a legitimate authorized/captured successor receives a distinct event ID and creation order. Delivery order is separate and may place capture before authorization or stale failure after current success.
+- **Reason:** This representation exercises the exact Milestone 10 deduplication and Milestone 11 reconciliation assumptions without misclassifying reordered state changes as duplicate deliveries or performing webhook processing during generation.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26

@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 12
-- **Last completed milestone:** Milestone 11 — Out-of-Order Handling and Payment-State Reconciliation
-- **Next proposed milestone:** Milestone 12 — Seeded Synthetic Dataset and Held-Out Digital Twin
+- **Current milestone:** None — awaiting approval to begin Milestone 13
+- **Last completed milestone:** Milestone 12 — Seeded Synthetic Dataset and Held-Out Digital Twin
+- **Next proposed milestone:** Milestone 13 — Baseline, RecoverAI Evaluation and Metrics
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -172,7 +172,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 12 — Seeded Synthetic Dataset and Held-Out Digital Twin
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** Reproducible development data and a locked 100-case evaluation batch with hidden simulated outcomes.
 - **Dependencies:** Milestones 2, 4–6, and 11.
 - **Acceptance criteria:**
