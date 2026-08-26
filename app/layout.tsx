@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     template: "%s · RecoverAI",
   },
   description:
-    "Credential-free RecoverAI prototype using static synthetic data. No real payments or merchant revenue.",
+    "RecoverAI prototype with a credential-free simulated demo and optional Razorpay Test Mode. No real money or merchant revenue.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

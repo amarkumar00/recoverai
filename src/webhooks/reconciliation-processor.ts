@@ -8,10 +8,12 @@ export class VerifiedWebhookReconciliationProcessor implements VerifiedWebhookEv
     private readonly acceptanceAudit: VerifiedWebhookAuditProcessor,
     private readonly reconciler: PaymentStateReconciler,
     private readonly timeoutMilliseconds = 1_000,
+    private readonly paymentLinkProcessor?: VerifiedWebhookEventProcessor,
   ) {}
 
   async process(event: PersistedWebhookEvent): Promise<void> {
     this.acceptanceAudit.process(event);
+    await this.paymentLinkProcessor?.process(event);
     await this.reconciler.reconcile({
       event,
       checkedAt: event.event.receivedAt,

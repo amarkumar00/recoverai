@@ -619,6 +619,8 @@ export class RecoveryActionExecutor {
           {
             referenceId: ids.paymentLinkReferenceId,
             caseReference: command.caseRecord.caseId,
+            expectedCaseState: command.caseRecord.state,
+            expectedCaseVersion: command.caseRecord.version,
             paymentId: command.caseRecord.paymentId,
             orderId: command.caseRecord.orderId,
             amountSubunits: command.caseRecord.verifiedUnpaidAmountSubunits,
@@ -825,7 +827,14 @@ export class RecoveryActionExecutor {
       command,
       (context) =>
         this.#adapter.fetchPaymentLink(
-          { externalLinkId: local.externalLinkId! },
+          {
+            externalLinkId: local.externalLinkId!,
+            referenceId: local.referenceId,
+            caseReference: local.caseId,
+            orderId: local.orderId,
+            amountSubunits: local.amountSubunits,
+            currency: local.currency,
+          },
           context,
         ),
     );
@@ -928,6 +937,11 @@ export class RecoveryActionExecutor {
           {
             externalLinkId: synchronized.externalLinkId!,
             requestReference: ids.idempotencyKey,
+            referenceId: synchronized.referenceId,
+            caseReference: synchronized.caseId,
+            orderId: synchronized.orderId,
+            amountSubunits: synchronized.amountSubunits,
+            currency: synchronized.currency,
           },
           context,
         ),

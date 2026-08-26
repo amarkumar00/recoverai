@@ -17,7 +17,7 @@ function canonicalProviderTime(seconds: number): string {
 
 function requireContains(
   envelope: RazorpayStyleExternalWebhookEnvelope,
-  entity: "payment" | "order" | "payment_link",
+  entity: "payment" | "order" | "payment_link" | "payment_downtime",
 ) {
   if (!envelope.contains.includes(entity)) {
     throw new Error("Webhook contains list conflicts with its event payload.");
@@ -118,7 +118,10 @@ export function normalizeVerifiedRazorpayWebhook(input: {
 
 function normalizeNonPaymentEvent(
   envelope: RazorpayStyleExternalWebhookEnvelope,
-  eventName: Exclude<SupportedWebhookEventName, `payment.${string}`>,
+  eventName: Exclude<
+    SupportedWebhookEventName,
+    "payment.failed" | "payment.authorized" | "payment.captured"
+  >,
   eventId: string,
   receivedAt: string,
 ): NormalizedPaymentEvent {
@@ -147,6 +150,31 @@ function normalizeNonPaymentEvent(
     });
   }
 
+  if (
+    eventName === "payment.downtime.started" ||
+    eventName === "payment.downtime.resolved" ||
+    eventName === "payment.downtime.updated"
+  ) {
+    requireContains(envelope, "payment_downtime");
+    const downtime = envelope.payload.payment_downtime?.entity;
+    if (downtime === undefined) {
+      throw new Error("Payment downtime webhook is missing its entity.");
+    }
+    const expected = {
+      "payment.downtime.started": "STARTED",
+      "payment.downtime.resolved": "RESOLVED",
+      "payment.downtime.updated": "UPDATED",
+    } as const;
+    return normalizedPaymentEventSchema.parse({
+      ...common,
+      downtimeSnapshot: {
+        downtimeId: downtime.id,
+        method: downtime.method,
+        status: expected[eventName],
+      },
+    });
+  }
+
   requireContains(envelope, "payment_link");
   const paymentLink = envelope.payload.payment_link?.entity;
   if (paymentLink === undefined) {
@@ -164,5 +192,18 @@ function normalizeNonPaymentEvent(
   return normalizedPaymentEventSchema.parse({
     ...common,
     recoveryLinkId: paymentLink.id,
+    paymentLinkSnapshot: {
+      externalLinkId: paymentLink.id,
+      referenceId: paymentLink.reference_id,
+      amountSubunits: paymentLink.amount,
+      amountPaidSubunits: paymentLink.amount_paid,
+      currency: paymentLink.currency,
+      status: {
+        "payment_link.paid": "PAID",
+        "payment_link.partially_paid": "PARTIALLY_PAID",
+        "payment_link.cancelled": "CANCELLED",
+        "payment_link.expired": "EXPIRED",
+      }[eventName],
+    },
   });
 }

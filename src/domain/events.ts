@@ -21,6 +21,9 @@ export const SUPPORTED_WEBHOOK_EVENT_NAMES = [
   "payment.authorized",
   "payment.captured",
   "order.paid",
+  "payment.downtime.started",
+  "payment.downtime.resolved",
+  "payment.downtime.updated",
   "payment_link.paid",
   "payment_link.partially_paid",
   "payment_link.cancelled",
@@ -75,9 +78,21 @@ export const razorpayStyleExternalPaymentLinkEntitySchema = z
   .object({
     id: externalProviderIdSchema,
     amount: z.number().int().nonnegative().safe(),
+    amount_paid: z.number().int().nonnegative().safe(),
     currency: currencyCodeSchema,
     status: boundedProviderValueSchema,
     reference_id: externalProviderIdSchema,
+  })
+  .passthrough();
+
+export const razorpayStyleExternalDowntimeEntitySchema = z
+  .object({
+    id: externalProviderIdSchema,
+    entity: z.literal("payment.downtime"),
+    method: paymentMethodSchema,
+    status: boundedProviderValueSchema,
+    begin: unixTimestampSecondsSchema,
+    end: unixTimestampSecondsSchema.nullable().optional(),
   })
   .passthrough();
 
@@ -95,11 +110,23 @@ const externalWebhookPayloadSchema = z
       .object({ entity: razorpayStyleExternalPaymentLinkEntitySchema })
       .passthrough()
       .optional(),
+    payment_downtime: z
+      .object({ entity: razorpayStyleExternalDowntimeEntitySchema })
+      .passthrough()
+      .optional(),
   })
   .passthrough()
   .refine(
-    ({ payment, order, payment_link: paymentLink }) =>
-      payment !== undefined || order !== undefined || paymentLink !== undefined,
+    ({
+      payment,
+      order,
+      payment_link: paymentLink,
+      payment_downtime: downtime,
+    }) =>
+      payment !== undefined ||
+      order !== undefined ||
+      paymentLink !== undefined ||
+      downtime !== undefined,
     { message: "Webhook payload must contain a relevant entity." },
   );
 
@@ -139,6 +166,25 @@ export const duplicateProcessingResultSchema = z.discriminatedUnion("status", [
   z.object({ status: z.literal("NOT_CHECKED") }).strict(),
 ]);
 
+export const normalizedPaymentLinkWebhookSnapshotSchema = z
+  .object({
+    externalLinkId: externalProviderIdSchema,
+    referenceId: externalProviderIdSchema,
+    amountSubunits: z.number().int().nonnegative().safe(),
+    amountPaidSubunits: z.number().int().nonnegative().safe(),
+    currency: currencyCodeSchema,
+    status: z.enum(["PAID", "PARTIALLY_PAID", "CANCELLED", "EXPIRED"]),
+  })
+  .strict();
+
+export const normalizedDowntimeWebhookSnapshotSchema = z
+  .object({
+    downtimeId: externalProviderIdSchema,
+    method: paymentMethodSchema,
+    status: z.enum(["STARTED", "RESOLVED", "UPDATED"]),
+  })
+  .strict();
+
 export const normalizedPaymentEventSchema = z
   .object({
     eventId: eventIdSchema,
@@ -149,15 +195,18 @@ export const normalizedPaymentEventSchema = z
     orderId: orderIdSchema.optional(),
     recoveryLinkId: recoveryLinkIdSchema.optional(),
     paymentSnapshot: normalizedPaymentSnapshotSchema.optional(),
+    paymentLinkSnapshot: normalizedPaymentLinkWebhookSnapshotSchema.optional(),
+    downtimeSnapshot: normalizedDowntimeWebhookSnapshotSchema.optional(),
     signatureVerification: signatureVerificationResultSchema,
     duplicateProcessing: duplicateProcessingResultSchema,
   })
   .strict()
   .refine(
-    ({ paymentId, orderId, recoveryLinkId }) =>
+    ({ paymentId, orderId, recoveryLinkId, downtimeSnapshot }) =>
       paymentId !== undefined ||
       orderId !== undefined ||
-      recoveryLinkId !== undefined,
+      recoveryLinkId !== undefined ||
+      downtimeSnapshot !== undefined,
     { message: "Normalized events require at least one internal reference." },
   );
 

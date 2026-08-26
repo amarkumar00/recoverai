@@ -89,7 +89,7 @@ export const webhookEvents = sqliteTable(
     ),
     check(
       "webhook_events_event_name_check",
-      sql`${table.eventName} IN ('payment.failed','payment.authorized','payment.captured','order.paid','payment_link.paid','payment_link.partially_paid','payment_link.cancelled','payment_link.expired')`,
+      sql`${table.eventName} IN ('payment.failed','payment.authorized','payment.captured','order.paid','payment.downtime.started','payment.downtime.resolved','payment.downtime.updated','payment_link.paid','payment_link.partially_paid','payment_link.cancelled','payment_link.expired')`,
     ),
     check(
       "webhook_events_processing_status_check",
@@ -520,6 +520,26 @@ export const demoScenarioRuns = sqliteTable(
   ],
 );
 
+export const testModeLinkAttempts = sqliteTable(
+  "test_mode_link_attempts",
+  {
+    attemptId: text("attempt_id").primaryKey(),
+    referenceId: text("reference_id").notNull(),
+    outcome: text("outcome", {
+      enum: ["CLAIMED", "CREATED", "FAILED_SAFE", "OUTCOME_UNCERTAIN"],
+    }).notNull(),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("test_mode_link_attempts_reference_uq").on(table.referenceId),
+    check(
+      "test_mode_link_attempts_outcome_check",
+      sql`${table.outcome} IN ('CLAIMED','CREATED','FAILED_SAFE','OUTCOME_UNCERTAIN')`,
+    ),
+  ],
+);
+
 export const recoverAiSchema = {
   webhookEvents,
   paymentSnapshots,
@@ -532,4 +552,5 @@ export const recoverAiSchema = {
   auditChainState,
   evaluationRuns,
   demoScenarioRuns,
+  testModeLinkAttempts,
 };

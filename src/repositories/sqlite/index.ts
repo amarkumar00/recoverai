@@ -874,6 +874,18 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
       return row === undefined ? null : toPaymentLink(row);
     },
 
+    findByExternalLinkId(externalLinkId: string) {
+      const validatedId = paymentLinkRecordSchema.shape.externalLinkId
+        .unwrap()
+        .parse(externalLinkId);
+      const row = db
+        .select()
+        .from(paymentLinks)
+        .where(eq(paymentLinks.externalLinkId, validatedId))
+        .get();
+      return row === undefined ? null : toPaymentLink(row);
+    },
+
     findByReferenceId(referenceId: string) {
       const validatedId =
         paymentLinkRecordSchema.shape.referenceId.parse(referenceId);

@@ -40,6 +40,8 @@ function createRequest(overrides: Record<string, unknown> = {}) {
   return createPaymentLinkRequestSchema.parse({
     referenceId: "reference_mock_001",
     caseReference: "case_mock_001",
+    expectedCaseState: "AWAITING_POLICY",
+    expectedCaseVersion: 1,
     paymentId: "pay_mock_001",
     orderId: "order_mock_001",
     amountSubunits: 100_000,

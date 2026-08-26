@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 15
-- **Last completed milestone:** Milestone 14 — Complete Merchant Dashboard and Interactive Demo Scenarios
-- **Next proposed milestone:** Milestone 15 — Optional Razorpay Test Mode Adapter
+- **Current milestone:** None — awaiting approval to begin Milestone 16
+- **Last completed milestone:** Milestone 15 — Optional Razorpay Test Mode Adapter
+- **Next proposed milestone:** Milestone 16 — Comprehensive Test and Reliability Hardening
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -214,7 +214,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 15 — Optional Razorpay Test Mode Adapter
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** The stable local product can optionally use documented Razorpay Test Mode endpoints while mock mode remains the default.
 - **Dependencies:** Milestones 8, 10–11, and 14.
 - **Acceptance criteria:**

@@ -170,6 +170,8 @@ async function seedLink(
     {
       referenceId: ids.paymentLinkReferenceId,
       caseReference: environment.command.caseRecord.caseId,
+      expectedCaseState: environment.command.caseRecord.state,
+      expectedCaseVersion: environment.command.caseRecord.version,
       paymentId: environment.command.caseRecord.paymentId,
       orderId: environment.command.caseRecord.orderId,
       amountSubunits:

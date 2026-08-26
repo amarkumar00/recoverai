@@ -130,6 +130,7 @@ export type PaymentLinkInsertResult =
 export interface PaymentLinkRepository {
   insert(input: PaymentLinkRecord): PaymentLinkInsertResult;
   findByRecoveryLinkId(recoveryLinkId: string): PaymentLinkRecord | null;
+  findByExternalLinkId(externalLinkId: string): PaymentLinkRecord | null;
   findByReferenceId(referenceId: string): PaymentLinkRecord | null;
   findBlockingByOrderId(orderId: string): PaymentLinkRecord | null;
   listByCaseId(caseId: string): PaymentLinkRecord[];

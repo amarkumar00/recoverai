@@ -386,3 +386,31 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** Deleting audit history would make the reset appear exact by silently weakening the tamper-evident claim. Preserving the chain is the safer explicit tradeoff: operational scenario readiness is reproducible, while prior audited demo actions remain historically detectable. The reset transaction itself is represented by its deterministic HTTP result and is not appended as a new audit event in this local prototype.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-26
+
+## ADR-056 — Runtime selection is explicit, server-only, and rejects Live Mode
+
+- **Decision:** Keep deterministic credential-free `demo` as the default. Permit `razorpay_test` only with a complete server-side Test Mode key pair, reject partial configuration, `NEXT_PUBLIC_` secret names, and `rzp_live_` key IDs, and require a separate explicit boolean before Test Mode writes. Expose only the safe `Demo Mode` or `Razorpay Test Mode` label to UI.
+- **Reason:** Optional sandbox access must not make credentials a build/runtime dependency or accidentally create a client-visible secret or Live Mode path.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-27
+
+## ADR-057 — Test Mode implements the existing five-capability port over fixed HTTP operations
+
+- **Decision:** Use a server-only injectable transport with fixed `https://api.razorpay.com` origin and allowlisted fetch-payment, fetch-downtime, create/fetch/cancel Standard Payment Link operations. Use Basic Authentication, bounded timeout/body size, strict response normalization, sanitized typed failures, and no automatic write retry. Keep the deterministic mock adapter as the independent default and Digital Twin dependency.
+- **Reason:** A narrow anti-corruption boundary supports a credible optional integration without turning RecoverAI, AI output, or clients into an arbitrary Razorpay API caller.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-27
+
+## ADR-058 — Test Mode link writes have a durable three-attempt local budget
+
+- **Decision:** Claim each stable Payment Link reference in SQLite before the provider POST and permit no more than three unique Test Mode creation attempts. Identical references replay without another POST. Record timeout as outcome-uncertain and consumed; never retry it automatically. Re-fetch payment state immediately before create, require trusted money/identity, disable partial payment/notifications/reminders, omit customers, enforce 15-minute-to-24-hour expiry bounds, and never persist the returned short URL.
+- **Reason:** Provider Test Mode has broader account limits, but RecoverAI needs a much smaller prototype blast radius and durable uncertainty handling across restarts.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-27
+
+## ADR-059 — Trusted Payment Link webhooks can stop recovery but cannot create authority from payload alone
+
+- **Decision:** Extend the signature-verified/deduplicated webhook boundary with documented downtime and Payment Link events. Correlate link events by a known persisted Test Mode external ID and require reference, amount, currency, relationship, and paid-amount agreement before lifecycle mutation. Fully paid links supply the explicit `RECOVERY_LINK_PAID` satisfaction basis; partial payments escalate and remain blocking. Unknown valid events are safely ignored with no persistence/action.
+- **Reason:** Provider events should close the bounded recovery loop while preventing an untrusted webhook payload from inventing a link relationship, money value, duplicate collection, or case recovery.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-27

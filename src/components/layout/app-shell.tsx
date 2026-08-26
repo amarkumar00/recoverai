@@ -3,8 +3,11 @@ import type { ReactNode } from "react";
 
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Badge } from "@/components/ui/badge";
+import { publicRuntimeMode } from "@/lib/env";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const runtimeMode = publicRuntimeMode();
+  const isTestMode = runtimeMode === "Razorpay Test Mode";
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">
@@ -25,10 +28,20 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mode-panel">
           <div className="mode-line">
             <CircleDotDashed aria-hidden="true" size={16} />
-            <span>Credential-free preview</span>
+            <span>
+              {isTestMode ? "Server-side sandbox" : "Credential-free preview"}
+            </span>
           </div>
-          <Badge tone="demo">Demo Mode · Synthetic Data</Badge>
-          <p>Prototype only. No real merchant payments or revenue.</p>
+          <Badge tone="demo">
+            {isTestMode
+              ? "Razorpay Test Mode · No real money"
+              : "Demo Mode · Synthetic Data"}
+          </Badge>
+          <p>
+            {isTestMode
+              ? "Sandbox only. Test Mode activity is excluded from simulated evaluation metrics."
+              : "Prototype only. No real merchant payments or revenue."}
+          </p>
         </div>
 
         <SidebarNav />
@@ -47,7 +60,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             <strong>RecoverAI</strong>
           </div>
-          <Badge tone="demo">Demo · Synthetic</Badge>
+          <Badge tone="demo">
+            {isTestMode ? "Test Mode · Sandbox" : "Demo · Synthetic"}
+          </Badge>
         </header>
         <div className="mobile-nav-wrap">
           <SidebarNav />

@@ -29,6 +29,13 @@
       "when": 1787846400000,
       "tag": "0003_demo_scenario_state",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787932800000,
+      "tag": "0004_test_mode_link_attempt_budget",
+      "breakpoints": true
     }
   ]
 }

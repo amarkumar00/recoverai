@@ -1,8 +1,8 @@
 # RecoverAI
 
-RecoverAI is a credential-free prototype for **Track 03 — AI Revenue Recovery** in the Razorpay AI Buildathon 2026. It explores how failed-payment events can become explainable, bounded recovery actions while measuring incremental **simulated** recovery across synthetic cases.
+RecoverAI is a credential-free-by-default prototype for **Track 03 — AI Revenue Recovery** in the Razorpay AI Buildathon 2026. It explores how failed-payment events can become explainable, bounded recovery actions while measuring incremental **simulated** recovery across synthetic cases. An optional server-side Razorpay Test Mode adapter is isolated from the deterministic demo and never enables Live Mode.
 
-> The current build provides a complete judge-facing dashboard, one persisted credential-free vertical slice, six fixed interactive safety scenarios, and a separate Razorpay-style public webhook boundary. The default provider is still a deterministic mock; it does not call Razorpay, send a customer message, or move real money. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
+> The current build provides a complete judge-facing dashboard, one persisted credential-free vertical slice, six fixed interactive safety scenarios, a separate Razorpay-style public webhook boundary, and an optional bounded Test Mode adapter. Demo Mode does not call Razorpay, send a customer message, or move real money. Razorpay Test Mode is a sandbox and also moves no real money. The project is not production-ready. Every dashboard/evaluation rupee result is simulated fixture data—not real merchant revenue.
 
 ## Requirements
 
@@ -102,7 +102,8 @@ stored separately as provider-reconciled authority. A stale delivery can add
 history but cannot reactivate recovery, increment contact count, or create a
 Payment Link. The default public adapter intentionally has no provider
 fixtures, so its lookup returns a deterministic unavailable result and starts
-no recovery. Real Test Mode lookup remains deferred.
+no recovery. With explicit complete Test Mode configuration, current-state
+reconciliation instead uses the optional server-side adapter below.
 
 Prototype limitations remain explicit: the atomic event claim and the
 tamper-evident audit append are two local operations, not one cross-component
@@ -110,7 +111,75 @@ transaction. A process failure between them requires operator repair rather
 than automatic replay of downstream effects. The route also does not yet add
 deployment rate limiting, webhook-secret rotation, multi-node database
 coordination, automatic repair/replay after a first-seen downstream failure,
-or live Razorpay Test Mode API calls.
+or multi-node durable operation.
+
+## Optional Razorpay Test Mode
+
+The Test Mode adapter is deliberately narrow and server-only. It supports only
+these documented operations:
+
+- [`GET /v1/payments/:id`](https://razorpay.com/docs/api/payments/fetch-with-id/) to fetch current payment state.
+- [`GET /v1/payments/downtimes`](https://razorpay.com/docs/api/payments/downtime/fetch-all) to read compatible structured downtime context.
+- [`POST /v1/payment_links`](https://razorpay.com/docs/api/payments/payment-links/create-standard/) to create one bounded Standard Payment Link.
+- [`GET /v1/payment_links/:id`](https://razorpay.com/docs/api/payments/payment-links/fetch-id-standard/) to fetch a known link.
+- [`POST /v1/payment_links/:id/cancel`](https://razorpay.com/docs/api/payments/payment-links/cancel-standard/) to cancel a known, created, zero-paid link.
+
+The API origin is fixed to `https://api.razorpay.com`; callers, AI output, and
+webhooks cannot choose a route. Requests use server-side Basic Authentication,
+bounded timeouts, bounded JSON responses, strict identifiers, sanitized errors,
+and no automatic retry. Write timeouts are outcome-uncertain and consume the
+local budget.
+
+### Private local configuration
+
+Keep these values only in an ignored `.env.local`; never use `NEXT_PUBLIC_` for
+any Razorpay secret:
+
+```bash
+APP_MODE=razorpay_test
+RAZORPAY_TEST_KEY_ID=rzp_test_replace_with_local_key_id
+RAZORPAY_TEST_KEY_SECRET=replace_with_local_test_key_secret
+RAZORPAY_WEBHOOK_SECRET=replace_with_local_test_webhook_secret
+RAZORPAY_TEST_PAYMENT_ID=pay_replace_with_known_test_payment
+RECOVERAI_ALLOW_TEST_MODE_WRITES=false
+```
+
+`APP_MODE=razorpay_test` requires a complete Test Mode key pair. Partial
+configuration fails validation; `rzp_live_` keys are rejected. Reads do not
+require write opt-in. Set `RECOVERAI_ALLOW_TEST_MODE_WRITES=true` only for one
+deliberately controlled sandbox check, then return it to `false`. The local
+database permits at most three unique Test Mode Payment Link creation attempts
+in total; an uncertain timeout still consumes one. This cap does not claim to
+know the merchant account's complete external Payment Link usage.
+
+Standard links use trusted payment amount/currency and a stable server-created
+reference, disable partial payments, notifications, and reminders, omit all
+customer contact fields, and expire within the 24-hour recovery window with at
+least 15 minutes remaining. Payment and case state are rechecked before create.
+The returned `short_url` is treated as sensitive Test Mode operational data: it
+is not persisted, logged, audited, or exposed in general dashboard read models.
+Digital Twin evaluation never invokes this adapter or creates Test Mode links.
+
+Payment, order, downtime, and Payment Link events continue through the exact
+raw-body signature boundary and durable provider event-ID deduplication.
+Unknown valid events return `UNSUPPORTED_EVENT_IGNORED` without persistence or
+downstream action. A known Test Mode link can recover a case only when its ID,
+reference, amount, currency, and fully-paid amount match trusted local data.
+Partial payment stops automation in human review and remains blocking to avoid
+duplicate collection.
+
+Before a controlled check, migrate the local database and create a small known
+Test Mode payment in the Razorpay Dashboard. RecoverAI never automates hosted
+checkout or fabricates a paid webhook. After the check, cancel only a link still
+in `created` state with zero paid amount, remove private credentials from the
+local environment, and keep `.env.local` uncommitted. The official
+[API authentication/Test Mode guidance](https://razorpay.com/docs/api/) and
+[Test Mode quickstart](https://razorpay.com/docs/payments/quickstart/) are the
+authority for sandbox behavior.
+
+No automatic capture, original-payment retry, refund, subscription, Route,
+Vulcan, QR/UPI-specific link, customer messaging, background worker, arbitrary
+Razorpay request, or Live Mode behavior exists.
 
 ## Local database and migrations
 

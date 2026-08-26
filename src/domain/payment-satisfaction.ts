@@ -9,7 +9,12 @@ export const paymentSatisfactionContextSchema = z.discriminatedUnion("status", [
   z
     .object({
       status: z.literal("SATISFIED"),
-      basis: z.enum(["PAYMENT_AUTHORIZED", "PAYMENT_CAPTURED", "ORDER_PAID"]),
+      basis: z.enum([
+        "PAYMENT_AUTHORIZED",
+        "PAYMENT_CAPTURED",
+        "ORDER_PAID",
+        "RECOVERY_LINK_PAID",
+      ]),
       verifiedAt: canonicalTimestampSchema,
     })
     .strict(),

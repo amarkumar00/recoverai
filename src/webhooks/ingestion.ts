@@ -1,4 +1,8 @@
-import { eventIdSchema } from "@/domain";
+import {
+  eventIdSchema,
+  razorpayStyleExternalWebhookEnvelopeSchema,
+  SUPPORTED_WEBHOOK_EVENT_NAMES,
+} from "@/domain";
 import type { RecoverAiRepositories } from "@/repositories";
 import type {
   SecureWebhookIngestionResult,
@@ -57,6 +61,15 @@ export class SecureRazorpayWebhookIngestor {
 
     let event;
     try {
+      const envelope =
+        razorpayStyleExternalWebhookEnvelopeSchema.parse(externalPayload);
+      if (
+        !SUPPORTED_WEBHOOK_EVENT_NAMES.includes(
+          envelope.event as (typeof SUPPORTED_WEBHOOK_EVENT_NAMES)[number],
+        )
+      ) {
+        return { status: "IGNORED_UNSUPPORTED" };
+      }
       event = normalizeVerifiedRazorpayWebhook({
         externalPayload,
         providerEventId: providerEventId.data,

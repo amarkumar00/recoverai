@@ -70,6 +70,9 @@ export async function handleRazorpayWebhookRequest(
   if (result.status === "DUPLICATE") {
     return safeResponse(200, "DUPLICATE_IGNORED");
   }
+  if (result.status === "IGNORED_UNSUPPORTED") {
+    return safeResponse(200, "UNSUPPORTED_EVENT_IGNORED");
+  }
   if (result.status === "CONFLICT") {
     return safeResponse(409, "EVENT_ID_CONFLICT");
   }

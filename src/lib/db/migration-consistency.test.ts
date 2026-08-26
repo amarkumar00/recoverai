@@ -21,6 +21,7 @@ const REQUIRED_TABLES = [
   "audit_chain_state",
   "evaluation_runs",
   "demo_scenario_runs",
+  "test_mode_link_attempts",
 ] as const;
 
 const IMPORTANT_INDEXES = [
@@ -35,6 +36,7 @@ const IMPORTANT_INDEXES = [
   "payment_links_one_blocking_per_order_uq",
   "audit_entries_timestamp_sequence_idx",
   "evaluation_runs_completed_at_idx",
+  "test_mode_link_attempts_reference_uq",
 ] as const;
 
 const temporaryDirectories: string[] = [];
@@ -71,7 +73,7 @@ describe("committed database migrations", () => {
       const migrationCount = database.client
         .prepare("SELECT count(*) AS count FROM __drizzle_migrations")
         .get() as { count: number };
-      expect(migrationCount.count).toBe(4);
+      expect(migrationCount.count).toBe(5);
     } finally {
       database.client.close();
     }

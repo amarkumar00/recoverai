@@ -14,6 +14,7 @@ export type WebhookSignatureResult =
 export type SecureWebhookIngestionResult =
   | { status: "ACCEPTED"; event: PersistedWebhookEvent }
   | { status: "DUPLICATE"; event: PersistedWebhookEvent }
+  | { status: "IGNORED_UNSUPPORTED" }
   | {
       status: "REJECTED";
       reason:

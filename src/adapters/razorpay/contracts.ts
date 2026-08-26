@@ -8,11 +8,13 @@ import {
   orderIdSchema,
   payableAmountSubunitsSchema,
   paymentIdSchema,
+  positiveCountSchema,
 } from "@/domain/primitives";
 import {
   normalizedPaymentStatusSchema,
   paymentMethodSchema,
 } from "@/domain/payments";
+import { recoveryCaseStateSchema } from "@/domain/states";
 
 export const adapterResourceIdSchema = z
   .string()
@@ -39,6 +41,9 @@ export const safeAdapterErrorCodeSchema = z.enum([
   "PARTIALLY_PAID",
   "ALREADY_CANCELLED",
   "EXPIRED",
+  "AUTHENTICATION_REJECTED",
+  "RATE_LIMITED",
+  "LOCAL_ATTEMPT_LIMIT_REACHED",
 ]);
 
 export const adapterFailureSchema = z
@@ -66,6 +71,15 @@ export const adapterPaymentSchema = z
     amountSubunits: payableAmountSubunitsSchema,
     currency: currencyCodeSchema,
     status: normalizedPaymentStatusSchema,
+    failure: z
+      .object({
+        code: boundedProviderValueSchema.optional(),
+        source: boundedProviderValueSchema.optional(),
+        step: boundedProviderValueSchema.optional(),
+        reason: boundedProviderValueSchema.optional(),
+      })
+      .strict()
+      .optional(),
     fetchedAt: canonicalTimestampSchema,
   })
   .strict();
@@ -91,7 +105,11 @@ export const fetchPaymentResultSchema = z.discriminatedUnion("status", [
   z
     .object({
       status: z.literal("DEPENDENCY_UNAVAILABLE"),
-      errorCode: z.literal("DEPENDENCY_UNAVAILABLE"),
+      errorCode: z.enum([
+        "DEPENDENCY_UNAVAILABLE",
+        "AUTHENTICATION_REJECTED",
+        "RATE_LIMITED",
+      ]),
       explanation: boundedReasonSchema,
     })
     .strict(),
@@ -134,7 +152,11 @@ export const fetchDowntimeResultSchema = z.discriminatedUnion("status", [
   z
     .object({
       status: z.literal("DEPENDENCY_UNAVAILABLE"),
-      errorCode: z.literal("DEPENDENCY_UNAVAILABLE"),
+      errorCode: z.enum([
+        "DEPENDENCY_UNAVAILABLE",
+        "AUTHENTICATION_REJECTED",
+        "RATE_LIMITED",
+      ]),
       explanation: boundedReasonSchema,
     })
     .strict(),
@@ -151,6 +173,8 @@ export const createPaymentLinkRequestSchema = z
   .object({
     referenceId: adapterResourceIdSchema,
     caseReference: adapterResourceIdSchema,
+    expectedCaseState: recoveryCaseStateSchema,
+    expectedCaseVersion: positiveCountSchema,
     paymentId: paymentIdSchema,
     orderId: orderIdSchema,
     amountSubunits: payableAmountSubunitsSchema,
@@ -175,13 +199,18 @@ export const adapterPaymentLinkSchema = z
     externalLinkId: adapterResourceIdSchema,
     publicUrl: z
       .url()
-      .refine((value) => value.startsWith("https://mock.razorpay.local/")),
+      .refine(
+        (value) =>
+          value.startsWith("https://mock.razorpay.local/") ||
+          value.startsWith("https://rzp.io/"),
+      ),
     referenceId: adapterResourceIdSchema,
     caseReference: adapterResourceIdSchema,
     orderId: orderIdSchema,
     amountSubunits: payableAmountSubunitsSchema,
     currency: currencyCodeSchema,
     status: mockPaymentLinkStatusSchema,
+    amountPaidSubunits: z.number().int().nonnegative().safe().optional(),
     createdAt: canonicalTimestampSchema,
     expiresAt: canonicalTimestampSchema,
     updatedAt: canonicalTimestampSchema,
@@ -218,7 +247,12 @@ export const createPaymentLinkResultSchema = z.discriminatedUnion("status", [
   z
     .object({
       status: z.literal("DEPENDENCY_UNAVAILABLE"),
-      errorCode: z.literal("DEPENDENCY_UNAVAILABLE"),
+      errorCode: z.enum([
+        "DEPENDENCY_UNAVAILABLE",
+        "AUTHENTICATION_REJECTED",
+        "RATE_LIMITED",
+        "LOCAL_ATTEMPT_LIMIT_REACHED",
+      ]),
       explanation: boundedReasonSchema,
     })
     .strict(),
@@ -239,7 +273,14 @@ export const createPaymentLinkResultSchema = z.discriminatedUnion("status", [
 ]);
 
 export const fetchPaymentLinkRequestSchema = z
-  .object({ externalLinkId: adapterResourceIdSchema })
+  .object({
+    externalLinkId: adapterResourceIdSchema,
+    referenceId: adapterResourceIdSchema.optional(),
+    caseReference: adapterResourceIdSchema.optional(),
+    orderId: orderIdSchema.optional(),
+    amountSubunits: payableAmountSubunitsSchema.optional(),
+    currency: currencyCodeSchema.optional(),
+  })
   .strict();
 export const fetchPaymentLinkResultSchema = z.discriminatedUnion("status", [
   z
@@ -265,7 +306,11 @@ export const fetchPaymentLinkResultSchema = z.discriminatedUnion("status", [
   z
     .object({
       status: z.literal("DEPENDENCY_UNAVAILABLE"),
-      errorCode: z.literal("DEPENDENCY_UNAVAILABLE"),
+      errorCode: z.enum([
+        "DEPENDENCY_UNAVAILABLE",
+        "AUTHENTICATION_REJECTED",
+        "RATE_LIMITED",
+      ]),
       explanation: boundedReasonSchema,
     })
     .strict(),
@@ -282,6 +327,11 @@ export const cancelPaymentLinkRequestSchema = z
   .object({
     externalLinkId: adapterResourceIdSchema,
     requestReference: adapterResourceIdSchema,
+    referenceId: adapterResourceIdSchema.optional(),
+    caseReference: adapterResourceIdSchema.optional(),
+    orderId: orderIdSchema.optional(),
+    amountSubunits: payableAmountSubunitsSchema.optional(),
+    currency: currencyCodeSchema.optional(),
   })
   .strict();
 
@@ -337,7 +387,11 @@ export const cancelPaymentLinkResultSchema = z.discriminatedUnion("status", [
   z
     .object({
       status: z.literal("DEPENDENCY_UNAVAILABLE"),
-      errorCode: z.literal("DEPENDENCY_UNAVAILABLE"),
+      errorCode: z.enum([
+        "DEPENDENCY_UNAVAILABLE",
+        "AUTHENTICATION_REJECTED",
+        "RATE_LIMITED",
+      ]),
       explanation: boundedReasonSchema,
     })
     .strict(),

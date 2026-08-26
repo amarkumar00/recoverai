@@ -144,6 +144,12 @@ export class DeterministicMockRazorpayAdapter implements RazorpayCapabilityPort 
     const next = adapterPaymentLinkSchema.parse({
       ...existing,
       status,
+      amountPaidSubunits:
+        status === "PAID"
+          ? existing.amountSubunits
+          : status === "PARTIALLY_PAID"
+            ? Math.max(1, Math.floor(existing.amountSubunits / 2))
+            : (existing.amountPaidSubunits ?? 0),
       updatedAt: canonicalTimestampSchema.parse(updatedAt),
     });
     this.#storeLink(next);
@@ -311,6 +317,7 @@ export class DeterministicMockRazorpayAdapter implements RazorpayCapabilityPort 
       amountSubunits: request.amountSubunits,
       currency: request.currency,
       status: "CREATED",
+      amountPaidSubunits: 0,
       createdAt: request.requestedAt,
       expiresAt: request.expiresAt,
       updatedAt: request.requestedAt,
