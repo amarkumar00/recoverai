@@ -1,0 +1,738 @@
+{
+  "title": "RecoverAI Held-Out Digital Twin Evaluation",
+  "simulationLabel": "SIMULATED",
+  "result": {
+    "simulationLabel": "SIMULATED",
+    "evaluationRunId": "eval_1126ebb9aa7b0e1b0f618b285019c444",
+    "datasetVersion": "recoverai-payment-failure-digital-twin-v1",
+    "datasetFingerprintSha256": "2065d1d50588ac7b8e8cf0782e7ae647c59bc02fedc71b856ca7c6d49f96ecdb",
+    "evaluationPolicyVersion": "recoverai-evaluation-policy-v1",
+    "baselinePolicyVersion": "generic-payment-link-after-15-minutes-v1",
+    "seed": "recoverai-held-out:2026-v1",
+    "completedAt": "2026-08-28T00:00:00.000Z",
+    "uniqueCaseCount": 100,
+    "uniqueProviderEventCount": 112,
+    "eventDeliveryCount": 125,
+    "duplicateDeliveryCount": 13,
+    "simulatedRevenueInitiallyAtRisk": {
+      "amountSubunits": 11883796,
+      "currency": "INR"
+    },
+    "baselineSimulatedRecovery": {
+      "amountSubunits": 4784383,
+      "currency": "INR"
+    },
+    "recoverAiSimulatedRecovery": {
+      "amountSubunits": 5526332,
+      "currency": "INR"
+    },
+    "incrementalSimulatedRecovery": {
+      "subunitDelta": 741949,
+      "currency": "INR"
+    },
+    "baselineRecoveredCaseCount": 39,
+    "recoverAiRecoveredCaseCount": 42,
+    "simulatedRecoveryRate": 0.42,
+    "rootCauseCorrectCount": 100,
+    "rootCauseAccuracy": 1,
+    "actionSelectionCorrectCount": 95,
+    "actionSelectionAccuracy": 0.95,
+    "unsafeActionsBlocked": 19,
+    "duplicateEventsIgnored": 13,
+    "duplicateChargeAttemptsPrevented": 10,
+    "baselineCustomerContactCount": 90,
+    "recoverAiCustomerContactCount": 21,
+    "customerContactsAvoided": 69,
+    "humanEscalationCount": 19,
+    "humanEscalationRate": 0.19,
+    "falsePositiveInterventionCostSimulated": {
+      "amountSubunits": 3436,
+      "currency": "INR"
+    },
+    "baselinePaymentLinkCreationCount": 86,
+    "paymentLinkCreationCount": 10,
+    "apiFallbackOrFailureCount": 5,
+    "meanProcessingTimeMilliseconds": 35.696,
+    "processingTimeModel": "SIMULATED_DETERMINISTIC_LOGICAL_V1",
+    "unresolvedExceptionCount": 43,
+    "unresolvedExceptions": [
+      {
+        "caseReference": "case_dt_f52c4a0d55012ce3",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_de6f40b0bbdaa8bd",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_84527535b2b19e1a",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_f0afb56d195a1818",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_b6388474765d28c0",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_a97dc48b4b44a571",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_4b1174589a6d12b5",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_13cb1e4a6c66cb28",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_23dede2374631b19",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_109c109948dd6238",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_ddea4b29f48743c1",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_5af4f2aed4c3c754",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_e5ec6d340ae55217",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_ca8e10c3f89cd9a8",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_9999cf3408086d69",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_4f5f1144a3ee3762",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_d5169139057ded61",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_c9c93c3f717f8e0d",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_a9acef5559ba28ee",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_af118bb71089529f",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_ea9801541ba6b2c5",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_0ae5a7fefe9090a2",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_d8f5ed4d7149d44e",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_7168e3b1c4838c07",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_1b25862f4836c54e",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_1dc53fc941f4dfcd",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_2481703dacc94989",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_c9b7253dc08b5a43",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_7c9f40efe4eb5f25",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_ecbd8cc488ec7f1e",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_b80affe18249033d",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_4714981db71e5759",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_57743ea4115c5e18",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_9b8a809e2c8052b0",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_c12c99ce20f2aa6f",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_9292fb212eae0e68",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_1753452f720ba326",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_2697daba4e9c88c7",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_50699d3ecf1b46b0",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_58656dd87017a543",
+        "strategy": "RECOVERAI",
+        "reasonCode": "UNRESOLVED"
+      },
+      {
+        "caseReference": "case_dt_e405ac2bff79e0cf",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_34a5635cefeec03c",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      },
+      {
+        "caseReference": "case_dt_187762d67ee70085",
+        "strategy": "RECOVERAI",
+        "reasonCode": "ESCALATED"
+      }
+    ],
+    "confusionMatrix": [
+      {
+        "actualFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "predictedFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "caseCount": 25
+      },
+      {
+        "actualFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "predictedFailureClass": "INSUFFICIENT_FUNDS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "predictedFailureClass": "CUSTOMER_CORRECTABLE",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "predictedFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "predictedFailureClass": "LATE_SUCCESS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "predictedFailureClass": "NON_RETRYABLE",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "predictedFailureClass": "AMBIGUOUS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "INSUFFICIENT_FUNDS",
+        "predictedFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "INSUFFICIENT_FUNDS",
+        "predictedFailureClass": "INSUFFICIENT_FUNDS",
+        "caseCount": 20
+      },
+      {
+        "actualFailureClass": "INSUFFICIENT_FUNDS",
+        "predictedFailureClass": "CUSTOMER_CORRECTABLE",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "INSUFFICIENT_FUNDS",
+        "predictedFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "INSUFFICIENT_FUNDS",
+        "predictedFailureClass": "LATE_SUCCESS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "INSUFFICIENT_FUNDS",
+        "predictedFailureClass": "NON_RETRYABLE",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "INSUFFICIENT_FUNDS",
+        "predictedFailureClass": "AMBIGUOUS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "CUSTOMER_CORRECTABLE",
+        "predictedFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "CUSTOMER_CORRECTABLE",
+        "predictedFailureClass": "INSUFFICIENT_FUNDS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "CUSTOMER_CORRECTABLE",
+        "predictedFailureClass": "CUSTOMER_CORRECTABLE",
+        "caseCount": 15
+      },
+      {
+        "actualFailureClass": "CUSTOMER_CORRECTABLE",
+        "predictedFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "CUSTOMER_CORRECTABLE",
+        "predictedFailureClass": "LATE_SUCCESS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "CUSTOMER_CORRECTABLE",
+        "predictedFailureClass": "NON_RETRYABLE",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "CUSTOMER_CORRECTABLE",
+        "predictedFailureClass": "AMBIGUOUS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "predictedFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "predictedFailureClass": "INSUFFICIENT_FUNDS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "predictedFailureClass": "CUSTOMER_CORRECTABLE",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "predictedFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "caseCount": 15
+      },
+      {
+        "actualFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "predictedFailureClass": "LATE_SUCCESS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "predictedFailureClass": "NON_RETRYABLE",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "predictedFailureClass": "AMBIGUOUS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "LATE_SUCCESS",
+        "predictedFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "LATE_SUCCESS",
+        "predictedFailureClass": "INSUFFICIENT_FUNDS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "LATE_SUCCESS",
+        "predictedFailureClass": "CUSTOMER_CORRECTABLE",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "LATE_SUCCESS",
+        "predictedFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "LATE_SUCCESS",
+        "predictedFailureClass": "LATE_SUCCESS",
+        "caseCount": 10
+      },
+      {
+        "actualFailureClass": "LATE_SUCCESS",
+        "predictedFailureClass": "NON_RETRYABLE",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "LATE_SUCCESS",
+        "predictedFailureClass": "AMBIGUOUS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "NON_RETRYABLE",
+        "predictedFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "NON_RETRYABLE",
+        "predictedFailureClass": "INSUFFICIENT_FUNDS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "NON_RETRYABLE",
+        "predictedFailureClass": "CUSTOMER_CORRECTABLE",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "NON_RETRYABLE",
+        "predictedFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "NON_RETRYABLE",
+        "predictedFailureClass": "LATE_SUCCESS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "NON_RETRYABLE",
+        "predictedFailureClass": "NON_RETRYABLE",
+        "caseCount": 10
+      },
+      {
+        "actualFailureClass": "NON_RETRYABLE",
+        "predictedFailureClass": "AMBIGUOUS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "AMBIGUOUS",
+        "predictedFailureClass": "DOWNTIME_OR_TRANSIENT",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "AMBIGUOUS",
+        "predictedFailureClass": "INSUFFICIENT_FUNDS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "AMBIGUOUS",
+        "predictedFailureClass": "CUSTOMER_CORRECTABLE",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "AMBIGUOUS",
+        "predictedFailureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "AMBIGUOUS",
+        "predictedFailureClass": "LATE_SUCCESS",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "AMBIGUOUS",
+        "predictedFailureClass": "NON_RETRYABLE",
+        "caseCount": 0
+      },
+      {
+        "actualFailureClass": "AMBIGUOUS",
+        "predictedFailureClass": "AMBIGUOUS",
+        "caseCount": 5
+      }
+    ],
+    "resultsByFailureClass": [
+      {
+        "failureClass": "DOWNTIME_OR_TRANSIENT",
+        "uniqueCaseCount": 25,
+        "recoveredCaseCount": 23,
+        "rootCauseCorrectCount": 25,
+        "actionSelectionCorrectCount": 25,
+        "simulatedRevenueAtRisk": {
+          "amountSubunits": 3481763,
+          "currency": "INR"
+        },
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 3124029,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0.92,
+        "rootCauseAccuracy": 1,
+        "actionSelectionAccuracy": 1,
+        "unresolvedExceptionCount": 2
+      },
+      {
+        "failureClass": "INSUFFICIENT_FUNDS",
+        "uniqueCaseCount": 20,
+        "recoveredCaseCount": 8,
+        "rootCauseCorrectCount": 20,
+        "actionSelectionCorrectCount": 20,
+        "simulatedRevenueAtRisk": {
+          "amountSubunits": 2709201,
+          "currency": "INR"
+        },
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 1319449,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0.4,
+        "rootCauseAccuracy": 1,
+        "actionSelectionAccuracy": 1,
+        "unresolvedExceptionCount": 12
+      },
+      {
+        "failureClass": "CUSTOMER_CORRECTABLE",
+        "uniqueCaseCount": 15,
+        "recoveredCaseCount": 8,
+        "rootCauseCorrectCount": 15,
+        "actionSelectionCorrectCount": 15,
+        "simulatedRevenueAtRisk": {
+          "amountSubunits": 1674281,
+          "currency": "INR"
+        },
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 934206,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0.5333333333333333,
+        "rootCauseAccuracy": 1,
+        "actionSelectionAccuracy": 1,
+        "unresolvedExceptionCount": 7
+      },
+      {
+        "failureClass": "NETWORK_OR_INTEGRATION_UNCERTAINTY",
+        "uniqueCaseCount": 15,
+        "recoveredCaseCount": 3,
+        "rootCauseCorrectCount": 15,
+        "actionSelectionCorrectCount": 15,
+        "simulatedRevenueAtRisk": {
+          "amountSubunits": 1492617,
+          "currency": "INR"
+        },
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 148648,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0.2,
+        "rootCauseAccuracy": 1,
+        "actionSelectionAccuracy": 1,
+        "unresolvedExceptionCount": 12
+      },
+      {
+        "failureClass": "LATE_SUCCESS",
+        "uniqueCaseCount": 10,
+        "recoveredCaseCount": 0,
+        "rootCauseCorrectCount": 10,
+        "actionSelectionCorrectCount": 5,
+        "simulatedRevenueAtRisk": {
+          "amountSubunits": 909871,
+          "currency": "INR"
+        },
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 0,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0,
+        "rootCauseAccuracy": 1,
+        "actionSelectionAccuracy": 0.5,
+        "unresolvedExceptionCount": 5
+      },
+      {
+        "failureClass": "NON_RETRYABLE",
+        "uniqueCaseCount": 10,
+        "recoveredCaseCount": 0,
+        "rootCauseCorrectCount": 10,
+        "actionSelectionCorrectCount": 10,
+        "simulatedRevenueAtRisk": {
+          "amountSubunits": 1089948,
+          "currency": "INR"
+        },
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 0,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0,
+        "rootCauseAccuracy": 1,
+        "actionSelectionAccuracy": 1,
+        "unresolvedExceptionCount": 0
+      },
+      {
+        "failureClass": "AMBIGUOUS",
+        "uniqueCaseCount": 5,
+        "recoveredCaseCount": 0,
+        "rootCauseCorrectCount": 5,
+        "actionSelectionCorrectCount": 5,
+        "simulatedRevenueAtRisk": {
+          "amountSubunits": 526115,
+          "currency": "INR"
+        },
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 0,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0,
+        "rootCauseAccuracy": 1,
+        "actionSelectionAccuracy": 1,
+        "unresolvedExceptionCount": 5
+      }
+    ],
+    "resultsBySelectedAction": [
+      {
+        "selectedAction": "WAIT_FOR_RECOVERY",
+        "caseCount": 40,
+        "recoveredCaseCount": 26,
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 3272677,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0.65
+      },
+      {
+        "selectedAction": "SEND_PAYMENT_LINK",
+        "caseCount": 10,
+        "recoveredCaseCount": 8,
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 934206,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0.8
+      },
+      {
+        "selectedAction": "REQUEST_METHOD_CHANGE",
+        "caseCount": 11,
+        "recoveredCaseCount": 8,
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 1319449,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0.7272727272727273
+      },
+      {
+        "selectedAction": "CANCEL_RECOVERY_ALREADY_PAID",
+        "caseCount": 5,
+        "recoveredCaseCount": 0,
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 0,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0
+      },
+      {
+        "selectedAction": "STOP_NON_RETRYABLE",
+        "caseCount": 15,
+        "recoveredCaseCount": 0,
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 0,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0
+      },
+      {
+        "selectedAction": "ESCALATE_HUMAN",
+        "caseCount": 19,
+        "recoveredCaseCount": 0,
+        "simulatedRevenueRecovered": {
+          "amountSubunits": 0,
+          "currency": "INR"
+        },
+        "simulatedRecoveryRate": 0
+      }
+    ]
+  },
+  "baselineDefinition": "At exactly 15 deterministic minutes, every eligible verified-unpaid failure selects the same generic SEND_PAYMENT_LINK action. An existing active link is reused; already-paid cases use STOP_NON_RETRYABLE only as a no-intervention representation, without claiming cancellation; unavailable or conflicting state escalates without a link or customer contact.",
+  "recoverAiDefinition": "Each unique scorer-visible synthetic case is re-diagnosed, ranked by the existing deterministic bounded mock scorer, gated by the existing policy firewall, and evaluated through the hidden simulated oracle only after its final action is fixed.",
+  "metricDefinitions": [
+    "All money is SIMULATED integer subunits in one currency; incremental simulated recovery equals RecoverAI simulated recovery minus baseline simulated recovery and may be negative.",
+    "RecoverAI simulated recovery rate is recovered unique cases divided by 100 unique payment cases; revenue and contacts are counted at most once per unique payment.",
+    "Root-cause accuracy is exact predicted-versus-revealed class matches divided by 100; action-selection accuracy is revealed allowed selections divided by 100.",
+    "Contacts avoided is max(0, baseline selected-outcome contacts minus RecoverAI selected-outcome contacts).",
+    "Human escalation rate is final ESCALATE_HUMAN selections divided by 100; unresolved exceptions are selected outcomes marked SIMULATED_UNRESOLVED or SIMULATED_ESCALATED.",
+    "Unsafe actions blocked counts actual policy blocks or safety redirects where the final action differs from the proposed action; duplicate-charge prevention counts actual ORIGINAL_PAYMENT_SATISFIED policy decisions.",
+    "Payment Link creation counts only approved CREATE_NEW link intents; API fallback/failure counts actual scorer safe fallbacks or invalid policy inputs.",
+    "Mean processing time is deterministic logical model time divided by all 125 deliveries; it is simulated and is not production latency."
+  ],
+  "knownLimitations": [
+    "The held-out oracle and outcomes are handcrafted synthetic fixtures, not production observations or real recovered revenue.",
+    "The deterministic mock scorer is not a trained model and the evaluation does not estimate production uplift, causality, or latency.",
+    "No network, credentials, real Razorpay Test Mode calls, real customer messaging, or real financial action is used.",
+    "The evaluator-only module boundary is enforced by code structure, lint rules, and tests; it is not a cryptographic secrecy boundary."
+  ]
+}

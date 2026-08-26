@@ -36,6 +36,7 @@ import {
 import {
   createSqliteRepositories,
   PersistedDataValidationError,
+  UnexpectedPersistenceConflictError,
 } from "@/repositories/sqlite";
 
 const laterTime = "2026-08-24T12:31:00.000Z";
@@ -260,6 +261,41 @@ describe("SQLite repositories", () => {
     } finally {
       secondDatabase.client.close();
       firstDatabase.client.close();
+    }
+  });
+
+  it("persists identical evaluation replays idempotently and rejects identity conflicts", () => {
+    const { database } = openMigratedDatabase();
+    const repositories = createSqliteRepositories(database);
+    const evaluation = evaluationRunRecordSchema.parse({
+      result: validSimulatedEvaluation,
+      createdAt: canonicalTime,
+    });
+
+    try {
+      expect(repositories.evaluationRuns.insert(evaluation)).toEqual(
+        evaluation,
+      );
+      expect(repositories.evaluationRuns.insert(evaluation)).toEqual(
+        evaluation,
+      );
+      expect(
+        database.client
+          .prepare("SELECT COUNT(*) AS count FROM evaluation_runs")
+          .get(),
+      ).toEqual({ count: 1 });
+
+      expect(() =>
+        repositories.evaluationRuns.insert({
+          ...evaluation,
+          createdAt: laterTime,
+        }),
+      ).toThrow(UnexpectedPersistenceConflictError);
+      expect(repositories.evaluationRuns.findById("eval_demo_001")).toEqual(
+        evaluation,
+      );
+    } finally {
+      database.client.close();
     }
   });
 
@@ -760,6 +796,26 @@ describe("SQLite repositories", () => {
           amountSubunits: 25_000_000,
           currency: "INR",
         },
+        resultsByFailureClass:
+          validSimulatedEvaluation.resultsByFailureClass.map(
+            (group, index) => ({
+              ...group,
+              simulatedRevenueRecovered: {
+                amountSubunits: index === 0 ? 25_000_000 : 0,
+                currency: "INR",
+              },
+            }),
+          ),
+        resultsBySelectedAction:
+          validSimulatedEvaluation.resultsBySelectedAction.map(
+            (group, index) => ({
+              ...group,
+              simulatedRevenueRecovered: {
+                amountSubunits: index === 0 ? 25_000_000 : 0,
+                currency: "INR",
+              },
+            }),
+          ),
         incrementalSimulatedRecovery: {
           subunitDelta: -5_000_000,
           currency: "INR",

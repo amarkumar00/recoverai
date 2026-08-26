@@ -11,6 +11,20 @@ RecoverAI is a credential-free prototype for **Track 03 — AI Revenue Recovery*
 
 No Razorpay or LLM credentials are needed for the default Demo Mode.
 
+## Held-out Digital Twin evaluation
+
+Milestone 13 adds a UI-independent, credential-free evaluation engine over the locked 100-case held-out Digital Twin. It compares the exact generic baseline—one generic Payment Link after 15 deterministic minutes for every eligible verified-unpaid failure—against the existing RecoverAI diagnosis, deterministic bounded mock scorer, and policy firewall. Both strategies fix their action before the same restricted evaluator reveals that selected action's hidden **simulated** outcome.
+
+The locked run contains 100 unique payments, 112 unique provider events, 125 deliveries, and 13 ignored duplicate deliveries. Its fingerprint is `2065d1d50588ac7b8e8cf0782e7ae647c59bc02fedc71b856ca7c6d49f96ecdb`. The deterministic golden result reports INR 4,784,383 baseline simulated recovered subunits and INR 5,526,332 RecoverAI simulated recovered subunits, for INR +741,949 incremental simulated subunits. These are synthetic fixture results—not real revenue or production uplift.
+
+See the complete [human-readable golden evaluation](docs/evaluation/GOLDEN_REPORT.md) and [strict machine-valid report](docs/evaluation/golden-report.json). Focused evaluation checks run with:
+
+```bash
+npx vitest run src/evaluation
+```
+
+The report documents every numerator, denominator, count rule, deterministic logical processing-time model, grouped result, limitation, and reproducibility rule. Evaluation runs have stable versioned identities and identical replay is idempotent in SQLite; conflicting content under the same identity fails closed.
+
 ## Local setup
 
 ```bash

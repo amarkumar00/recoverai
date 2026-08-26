@@ -963,8 +963,20 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
           unresolvedExceptionCount: result.unresolvedExceptionCount,
           createdAt: input.createdAt,
         })
+        .onConflictDoNothing({ target: evaluationRuns.evaluationRunId })
         .run();
-      return input;
+      const existing = evaluationRunRepository.findById(result.evaluationRunId);
+      if (existing === null) {
+        throw new UnexpectedPersistenceConflictError(
+          "Evaluation run insert did not produce a readable record.",
+        );
+      }
+      if (canonicalizeJson(existing) !== canonicalizeJson(input)) {
+        throw new UnexpectedPersistenceConflictError(
+          "Evaluation run identity already exists with different validated content.",
+        );
+      }
+      return existing;
     },
 
     findById(evaluationRunId: string) {

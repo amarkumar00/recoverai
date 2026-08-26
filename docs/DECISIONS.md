@@ -358,3 +358,17 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** This representation exercises the exact Milestone 10 deduplication and Milestone 11 reconciliation assumptions without misclassifying reordered state changes as duplicate deliveries or performing webhook processing during generation.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-26
+
+## ADR-052 — The canonical comparison baseline is generic link recovery after exactly 15 minutes
+
+- **Decision:** At exactly 15 deterministic minutes after the failure observation, select `SEND_PAYMENT_LINK` for every eligible verified-unpaid case without diagnosis, AI ranking, or hidden outcomes. Reuse an active link rather than create a duplicate. Already-paid state creates no link/contact and uses `STOP_NON_RETRYABLE` only as a canonical no-intervention representation; unavailable or conflicting state escalates without contact. Reveal the selected hidden simulated outcome only after this decision is fixed.
+- **Reason:** A real generic recovery workflow is a fairer comparator than ₹0 or universal no-action, while trusted current state, money integrity, and link uniqueness remain financial-safety prerequisites.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26
+
+## ADR-053 — Held-out evaluation uses checked simulated aggregates and stable replay identity
+
+- **Decision:** Evaluate exactly 100 unique payments against one restricted evaluator, count duplicate/out-of-order deliveries only as operational evidence, aggregate money with checked integer-subunit arithmetic, retain negative incremental results, and derive every secondary metric from actual traces or revealed selected outcomes. Use a deterministic logical processing-time model, a stable SHA-256 run identity over dataset/configuration versions, and conflict-aware idempotent evaluation persistence. Commit a strict JSON golden report plus a human-readable interpretation.
+- **Reason:** This prevents hidden-outcome leakage, duplicate revenue/contact counting, floating-point money drift, wall-clock instability, hard-coded favorable totals, and conflicting replay records while preserving unfavorable or unresolved results honestly.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26

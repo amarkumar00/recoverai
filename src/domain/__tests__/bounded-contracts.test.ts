@@ -182,6 +182,10 @@ describe("simulated evaluation result", () => {
     expect(
       simulatedEvaluationResultSchema.safeParse({
         ...validSimulatedEvaluation,
+        baselineSimulatedRecovery: {
+          amountSubunits: 36_825_000,
+          currency: "INR",
+        },
         incrementalSimulatedRecovery: {
           subunitDelta: -50_000,
           currency: "INR",
