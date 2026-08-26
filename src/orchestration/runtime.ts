@@ -1,13 +1,16 @@
 import "server-only";
 
+import { DeterministicMockRazorpayAdapter } from "@/adapters/razorpay";
 import { createSqliteAuditChain } from "@/audit";
 import { createLocalDatabase } from "@/lib/db/client";
 import { DemoReadModelService } from "@/orchestration/read-model";
 import { RecoverAiDemoOrchestrator } from "@/orchestration/recovery-orchestrator";
+import { PaymentStateReconciler } from "@/reconciliation";
 import { createSqliteRepositories } from "@/repositories/sqlite";
 import {
   SecureRazorpayWebhookIngestor,
   VerifiedWebhookAuditProcessor,
+  VerifiedWebhookReconciliationProcessor,
 } from "@/webhooks";
 
 let singleton: ReturnType<typeof createRuntime> | undefined;
@@ -17,9 +20,18 @@ function createRuntime() {
   const repositories = createSqliteRepositories(database);
   const audit = createSqliteAuditChain(database);
   const orchestrator = new RecoverAiDemoOrchestrator({ repositories, audit });
+  const publicMockAdapter = new DeterministicMockRazorpayAdapter();
+  const reconciler = new PaymentStateReconciler({
+    adapter: publicMockAdapter,
+    repositories,
+    audit,
+  });
   const webhookIngestor = new SecureRazorpayWebhookIngestor({
     repositories,
-    processor: new VerifiedWebhookAuditProcessor(audit),
+    processor: new VerifiedWebhookReconciliationProcessor(
+      new VerifiedWebhookAuditProcessor(audit),
+      reconciler,
+    ),
   });
   const readModel = new DemoReadModelService({
     repositories,
@@ -33,6 +45,7 @@ function createRuntime() {
     orchestrator,
     readModel,
     webhookIngestor,
+    reconciler,
   };
 }
 

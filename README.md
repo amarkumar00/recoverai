@@ -2,7 +2,7 @@
 
 RecoverAI is a credential-free prototype for **Track 03 — AI Revenue Recovery** in the Razorpay AI Buildathon 2026. It explores how failed-payment events can become explainable, bounded recovery actions while measuring incremental **simulated** recovery across synthetic cases.
 
-> The current build connects those foundations into one persisted, credential-free vertical slice and adds a separate Razorpay-style public webhook boundary. The public boundary verifies HMAC-SHA256 against the exact raw request bytes, validates and normalizes signed events, and durably suppresses duplicate provider event IDs before one downstream audit effect. It does not call Razorpay, send a customer message, move real money, or run recovery from a public event before current-state reconciliation exists. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
+> The current build connects those foundations into one persisted, credential-free vertical slice and a separate Razorpay-style public webhook boundary. The public boundary verifies HMAC-SHA256 against the exact raw request bytes, durably suppresses duplicate provider event IDs, and sends only the verified first delivery to current-state reconciliation. The default provider is still a deterministic mock; it does not call Razorpay, send a customer message, or move real money. It is not production-ready. Every rupee result is simulated fixture data—not real merchant revenue.
 
 ## Requirements
 
@@ -62,19 +62,22 @@ environment value:
 RAZORPAY_WEBHOOK_SECRET=replace_with_test_webhook_secret
 ```
 
-Do not commit that value. This milestone accepts and audits verified events but
-deliberately creates no recovery case, action, customer contact, or Payment
-Link from them. Out-of-order handling, latest-state fetch, late-success logic,
-and safe handoff into recovery belong to Milestone 11. This prevents a stale
-webhook snapshot from acquiring financial authority.
+Do not commit that value. A verified first-seen original-payment event now
+preserves its webhook snapshot as historical evidence and performs a fresh
+lookup through the narrow provider capability port. The lookup result is
+stored separately as provider-reconciled authority. A stale delivery can add
+history but cannot reactivate recovery, increment contact count, or create a
+Payment Link. The default public adapter intentionally has no provider
+fixtures, so its lookup returns a deterministic unavailable result and starts
+no recovery. Real Test Mode lookup remains deferred.
 
 Prototype limitations remain explicit: the atomic event claim and the
 tamper-evident audit append are two local operations, not one cross-component
 transaction. A process failure between them requires operator repair rather
 than automatic replay of downstream effects. The route also does not yet add
 deployment rate limiting, webhook-secret rotation, multi-node database
-coordination, out-of-order reconciliation, or live Razorpay Test Mode API
-calls.
+coordination, automatic repair/replay after a first-seen downstream failure,
+or live Razorpay Test Mode API calls.
 
 ## Local database and migrations
 
@@ -113,6 +116,10 @@ Database rows intentionally use SQLite-friendly representations:
 - AI confidence is indexed as integer millionths while the validated domain model remains a `0..1` number.
 - Strict domain documents are serialized as JSON only where preserving the complete validated structure is useful.
 - Every serialized document is parsed and revalidated through the Milestone 2 Zod schema when read; corrupt data fails closed.
+- Payment snapshots carry an explicit `WEBHOOK_EVIDENCE` or
+  `PROVIDER_RECONCILED` origin. A database uniqueness constraint permits one
+  snapshot of each origin per source event, while provider-reconciled lookups
+  alone supply current recovery authority.
 
 ## Tamper-evident audit chain
 
@@ -228,6 +235,11 @@ The provider-independent capability port in `src/ports/razorpay.ts` exposes only
 
 `RecoveryActionExecutor` accepts a strict command containing the trusted case, deterministic policy decision, matching action intent, injected execution timestamp, and bounded timeout. AI output never reaches this boundary directly and cannot construct provider operations. Before creating a simulated Payment Link, the executor fetches the current payment and verifies payment ID, order ID, integer amount, currency, and unpaid status. Authorization or capture stops creation. Existing safe links are reused, while conflicting or partially paid links fail safe or require review.
 
+The executor also re-reads the persisted case state and optimistic version
+after the payment lookup and immediately before Payment Link creation. An
+earlier policy decision cannot create a link after concurrent reconciliation
+has moved the case to a terminal state.
+
 Execution identities are stable SHA-256-derived references in the versioned `recoverai_exec_v1` namespace. Recovery actions use a compare-and-set lifecycle:
 
 ```text
@@ -239,6 +251,32 @@ Only the successful claim may begin an adapter operation. Replays return the per
 Every material execution stage is appended to the tamper-evident audit chain with sanitized operational identifiers and fixed explanations. The initial audit append must succeed before any adapter call. SQLite transactions are never held across an awaited adapter operation; consequently the external mock operation, local persistence, and audit append are not one atomic transaction. If audit completion fails after an operation, the executor returns `AUDIT_INCOMPLETE`, preserves the observed local result where available, and does not automatically repeat the financial operation.
 
 All Payment Links and financial outcomes produced by this adapter are **simulated**. The implementation makes no real Razorpay request, sends no customer message, and does not claim production readiness or recovered merchant revenue.
+
+## Current-state reconciliation and late-success stopping
+
+`src/reconciliation/` is UI-independent and depends only on repositories, the
+narrow provider capability port, and the audit appender. For original-payment
+events it fetches current payment state, then checks payment ID, order ID,
+integer subunit amount, currency, and the applicable case/order relationship.
+Unavailable, malformed, unknown, mismatched, or impossible regressing state
+fails closed without activating recovery.
+
+Provider-reconciled success is monotonic: once authorization or capture is
+trusted, a later fetched unpaid state cannot downgrade it. Captured authority
+cannot be downgraded to authorized. Webhook arrival order is retained only as
+historical evidence. Reconciliation replays and concurrent attempts converge
+through snapshot uniqueness, optimistic case versions, idempotent action
+claims, and the one-blocking-link database constraint.
+
+When the original payment is currently authorized/captured—or a uniquely
+related `order.paid` event is corroborated by current payment success—the case
+moves through the existing legal `STOPPED` path. An existing simulated recovery
+link is fetched before cancellation. Only a fetched `CREATED` link is cancelled;
+paid, partially paid, expired, or already-cancelled links are never cancelled.
+Unavailable link state leaves the case stopped and records a safe-review
+outcome. Replays and competing stop attempts do not repeat cancellation. The
+reconciler never captures an authorized payment and never retries the original
+payment.
 
 ## Credential-free vertical-slice demo
 
@@ -293,7 +331,8 @@ npm run check
 - Recovered terminal stopping and an exact 10× money-integrity safety proof
 - Dashboard-safe read models with no customer hash, public link URL, secrets, raw payload, or audit hashes
 - Separate raw-body-verified Razorpay-style webhook route with durable sequential and concurrent event deduplication
-- Privacy-minimized first-seen webhook audit effect and safe deterministic HTTP responses
+- Privacy-minimized first-seen webhook audit and current-state reconciliation effects with safe deterministic HTTP responses
+- Separate webhook-evidence and provider-reconciled histories, monotonic success authority, and late-success stopping
 - Restrained placeholders for later milestone routes
 - Reusable card, badge, table, layout, color, and chart foundations
 
@@ -312,7 +351,7 @@ The domain layer currently defines:
 - A deliberately separate Razorpay-style external payload boundary
 - Passive signature-verification and duplicate-processing result shapes
 
-The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer, policy firewall, audit hash chain, mock recovery executor, persisted orchestration, first vertical-slice UI, and secure public webhook ingestion boundary are implemented. Provider-event reconciliation, held-out evaluation, and the complete dashboard remain deferred to their approved milestones.
+The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer, policy firewall, audit hash chain, mock recovery executor, persisted orchestration, first vertical-slice UI, secure public webhook ingestion, and provider-independent current-state reconciliation are implemented. Held-out evaluation and the complete dashboard remain deferred to their approved milestones.
 
 ## Canonical project documents
 

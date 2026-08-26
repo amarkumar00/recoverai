@@ -25,6 +25,7 @@ const REQUIRED_TABLES = [
 const IMPORTANT_INDEXES = [
   "webhook_events_provider_event_id_uq",
   "payment_snapshots_payment_latest_idx",
+  "payment_snapshots_source_origin_uq",
   "recovery_cases_payment_id_uq",
   "ai_recommendations_case_recommended_idx",
   "policy_decisions_case_decided_idx",
@@ -69,7 +70,7 @@ describe("committed database migrations", () => {
       const migrationCount = database.client
         .prepare("SELECT count(*) AS count FROM __drizzle_migrations")
         .get() as { count: number };
-      expect(migrationCount.count).toBe(2);
+      expect(migrationCount.count).toBe(3);
     } finally {
       database.client.close();
     }

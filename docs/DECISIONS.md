@@ -316,3 +316,24 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** A webhook payload is an asynchronous snapshot, not trusted current payment state. Milestone 11 must add out-of-order handling and current-state reconciliation before a verified provider event can safely enter financial recovery orchestration.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-26
+
+## ADR-046 — Webhook evidence and provider-reconciled authority are separate persisted facts
+
+- **Decision:** Store normalized webhook snapshots as `WEBHOOK_EVIDENCE` and fresh capability-port results as `PROVIDER_RECONCILED`. Enforce one snapshot per source event and origin in SQLite. Only provider-reconciled snapshots may determine current recovery eligibility; webhook arrival order remains historical evidence. Once reconciled authorization/capture is trusted, later unpaid or captured-to-authorized regressions are conflicting rather than authoritative.
+- **Reason:** Asynchronous webhook delivery can be delayed or reordered. Explicit provenance plus monotonic success prevents a stale failure or older authorized delivery from downgrading known success while retaining an honest event history.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26
+
+## ADR-047 — Original-payment success uses legal stopping and bounded simulated-link cancellation
+
+- **Decision:** Reconciled authorization, capture, or uniquely related order-paid evidence moves an active case through the existing legal `STOPPED` transition; it never captures the payment. The reconciler then uses a schema-valid deterministic stopping decision and the existing idempotent executor. Cancellation first fetches the latest simulated Payment Link and proceeds only for `CREATED`; paid, partially paid, expired, and already-cancelled links are not cancelled. Unavailable link state records safe review while outreach remains stopped.
+- **Reason:** Late success must prevent duplicate collection without bypassing state legality, action idempotency, Payment Link lifecycle validation, or the policy-bounded executor.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26
+
+## ADR-048 — Public reconciliation remains credential-free and does not invent live capability
+
+- **Decision:** The verified first-seen public webhook processor now appends the Milestone 10 acceptance audit and invokes provider-independent reconciliation. The default runtime supplies an empty deterministic mock adapter, so unknown provider payments produce a recorded unavailable outcome and no recovery. The internal synthetic demo remains a separate visible `NOT_CHECKED` path. No real Test Mode REST adapter is introduced.
+- **Reason:** This safely completes the public handoff and exercises the fail-closed behavior without credentials, undocumented APIs, network access, or real-money authority. Live Test Mode lookup remains Milestone 15 work.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-26

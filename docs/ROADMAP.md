@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 11
-- **Last completed milestone:** Milestone 10 — Razorpay-Style Webhook Security and Event Deduplication
-- **Next proposed milestone:** Milestone 11 — Out-of-Order Handling and Payment-State Reconciliation
+- **Current milestone:** None — awaiting approval to begin Milestone 12
+- **Last completed milestone:** Milestone 11 — Out-of-Order Handling and Payment-State Reconciliation
+- **Next proposed milestone:** Milestone 12 — Seeded Synthetic Dataset and Held-Out Digital Twin
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -159,7 +159,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 11 — Out-of-Order Handling and Payment-State Reconciliation
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** Stale webhook snapshots cannot cause stale or duplicate recovery actions.
 - **Dependencies:** Milestones 8–10.
 - **Acceptance criteria:**

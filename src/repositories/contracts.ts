@@ -52,9 +52,15 @@ export const persistedWebhookEventSchema = webhookEventClaimSchema.extend({
   processingStatus: z.enum(["FIRST_SEEN", "DUPLICATE", "NOT_CHECKED"]),
 });
 
+export const paymentSnapshotOriginSchema = z.enum([
+  "WEBHOOK_EVIDENCE",
+  "PROVIDER_RECONCILED",
+]);
+
 export const paymentSnapshotObservationSchema = z
   .object({
     snapshot: normalizedPaymentSnapshotSchema,
+    origin: paymentSnapshotOriginSchema.default("WEBHOOK_EVIDENCE"),
     observedAt: canonicalTimestampSchema,
     sourceEventId: eventIdSchema.optional(),
     createdAt: canonicalTimestampSchema,
@@ -256,7 +262,8 @@ export const persistedAuditEntrySchema = auditEntrySchema;
 
 export type WebhookEventClaim = z.infer<typeof webhookEventClaimSchema>;
 export type PersistedWebhookEvent = z.infer<typeof persistedWebhookEventSchema>;
-export type PaymentSnapshotObservation = z.infer<
+export type PaymentSnapshotOrigin = z.infer<typeof paymentSnapshotOriginSchema>;
+export type PaymentSnapshotObservation = z.input<
   typeof paymentSnapshotObservationSchema
 >;
 export type PersistedPaymentSnapshot = z.infer<

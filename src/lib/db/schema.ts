@@ -111,6 +111,11 @@ export const paymentSnapshots = sqliteTable(
     observedAt: text("observed_at").notNull(),
     sourceEventId: text("source_event_id").references(() => webhookEvents.id),
     createdAt: text("created_at").notNull(),
+    snapshotOrigin: text("snapshot_origin", {
+      enum: ["WEBHOOK_EVIDENCE", "PROVIDER_RECONCILED"],
+    })
+      .notNull()
+      .default("WEBHOOK_EVIDENCE"),
   },
   (table) => [
     index("payment_snapshots_payment_latest_idx").on(
@@ -119,6 +124,10 @@ export const paymentSnapshots = sqliteTable(
       table.snapshotSequence,
     ),
     index("payment_snapshots_order_id_idx").on(table.orderId),
+    uniqueIndex("payment_snapshots_source_origin_uq").on(
+      table.sourceEventId,
+      table.snapshotOrigin,
+    ),
     check(
       "payment_snapshots_amount_check",
       sql`typeof(${table.amountSubunits}) = 'integer' AND ${table.amountSubunits} >= 0`,
@@ -130,6 +139,10 @@ export const paymentSnapshots = sqliteTable(
     check(
       "payment_snapshots_status_check",
       sql`${table.status} IN ('CREATED','AUTHORIZED','CAPTURED','FAILED','UNKNOWN')`,
+    ),
+    check(
+      "payment_snapshots_origin_check",
+      sql`${table.snapshotOrigin} IN ('WEBHOOK_EVIDENCE','PROVIDER_RECONCILED')`,
     ),
   ],
 );

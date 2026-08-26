@@ -51,6 +51,8 @@ export const sanitizedAuditMetadataSchema = z
     action: recoveryActionSchema.optional(),
     failureClass: failureClassSchema.optional(),
     providerStatus: boundedProviderValueSchema.optional(),
+    webhookStatus: boundedProviderValueSchema.optional(),
+    currentStatus: boundedProviderValueSchema.optional(),
     confidence: unitIntervalSchema.optional(),
     checkCount: z.number().int().nonnegative().max(100).optional(),
     isSynthetic: z.boolean().optional(),

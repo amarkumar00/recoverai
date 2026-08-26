@@ -15,6 +15,13 @@
       "when": 1787673600000,
       "tag": "0001_tamper_evident_audit_chain",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787760000000,
+      "tag": "0002_reconciled_payment_authority",
+      "breakpoints": true
     }
   ]
 }

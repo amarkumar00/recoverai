@@ -4,6 +4,7 @@ import type {
   PaymentLinkLifecycleUpdate,
   PaymentLinkRecord,
   PaymentSnapshotObservation,
+  PaymentSnapshotOrigin,
   PersistedPaymentSnapshot,
   PersistedWebhookEvent,
   PolicyDecisionRecord,
@@ -46,8 +47,14 @@ export interface PaymentSnapshotRepository {
     | { status: "CREATED"; snapshot: PersistedPaymentSnapshot }
     | { status: "EXISTING"; snapshot: PersistedPaymentSnapshot }
     | { status: "CONFLICT"; snapshot: PersistedPaymentSnapshot };
-  findBySourceEventId(sourceEventId: string): PersistedPaymentSnapshot | null;
+  findBySourceEventId(
+    sourceEventId: string,
+    origin?: PaymentSnapshotOrigin,
+  ): PersistedPaymentSnapshot | null;
   findLatestByPaymentId(paymentId: string): PersistedPaymentSnapshot | null;
+  findLatestReconciledByPaymentId(
+    paymentId: string,
+  ): PersistedPaymentSnapshot | null;
   listByPaymentId(paymentId: string): PersistedPaymentSnapshot[];
 }
 
@@ -65,6 +72,7 @@ export interface RecoveryCaseRepository {
     | { status: "CONFLICT"; recoveryCase: RecoveryCaseRecord };
   findById(caseId: string): RecoveryCaseRecord | null;
   findByPaymentId(paymentId: string): RecoveryCaseRecord | null;
+  listByOrderId(orderId: string): RecoveryCaseRecord[];
   updateIfVersionMatches(
     input: RecoveryCaseVersionUpdate,
   ): RecoveryCaseVersionUpdateResult;

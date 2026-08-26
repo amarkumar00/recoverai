@@ -434,6 +434,19 @@ export class RecoveryActionExecutor {
         ids.auditEntryId("final"),
       );
     }
+    const currentCaseCheck = this.#validateCurrentCase(command);
+    if (currentCaseCheck !== "VALID") {
+      return this.#finish(
+        command,
+        action,
+        record,
+        "FAILED_SAFE",
+        "FAILED_SAFE",
+        currentCaseCheck,
+        SAFE.IN_PROGRESS,
+        ids.auditEntryId("final"),
+      );
+    }
     const intent = command.intent;
     if (!("linkUse" in intent)) {
       return this.#finish(
@@ -582,6 +595,19 @@ export class RecoveryActionExecutor {
         "AUDIT_INCOMPLETE",
         "AUDIT_INCOMPLETE",
         SAFE.AUDIT,
+        ids.auditEntryId("final"),
+      );
+    }
+    const finalCaseCheck = this.#validateCurrentCase(command);
+    if (finalCaseCheck !== "VALID") {
+      return this.#finish(
+        command,
+        action,
+        record,
+        "FAILED_SAFE",
+        "FAILED_SAFE",
+        finalCaseCheck,
+        SAFE.IN_PROGRESS,
         ids.auditEntryId("final"),
       );
     }
@@ -1185,6 +1211,28 @@ export class RecoveryActionExecutor {
       return "ALREADY_PAID";
     if (payment.status !== "FAILED" && payment.status !== "CREATED")
       return "PAYMENT_STATE_UNSAFE";
+    return "VALID";
+  }
+
+  #validateCurrentCase(command: RecoveryExecutionCommand) {
+    const current = this.#repositories.recoveryCases.findById(
+      command.caseRecord.caseId,
+    );
+    if (current === null) return "CASE_NOT_FOUND";
+    if (
+      current.version !== command.caseRecord.version ||
+      current.state !== command.caseRecord.state
+    ) {
+      return "CASE_STATE_STALE";
+    }
+    if (
+      current.state === "RECOVERED" ||
+      current.state === "STOPPED" ||
+      current.state === "ESCALATED" ||
+      current.state === "ERROR_SAFE"
+    ) {
+      return "CASE_TERMINAL";
+    }
     return "VALID";
   }
 

@@ -132,6 +132,7 @@ function toPersistedPaymentSnapshot(
       failure,
       paymentCreatedAt: row.providerCreatedAt,
     },
+    origin: row.snapshotOrigin,
     observedAt: row.observedAt,
     sourceEventId: row.sourceEventId ?? undefined,
     createdAt: row.createdAt,
@@ -233,6 +234,10 @@ function toPolicyDecision(
 
 function sameCanonical(left: unknown, right: unknown): boolean {
   return canonicalizeJson(left) === canonicalizeJson(right);
+}
+
+function withoutUndefined(value: unknown): unknown {
+  return JSON.parse(JSON.stringify(value)) as unknown;
 }
 
 function comparableWebhookEvent(event: PersistedWebhookEvent["event"]) {
@@ -359,6 +364,7 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
             input.snapshot.failure === undefined
               ? undefined
               : JSON.stringify(input.snapshot.failure),
+          snapshotOrigin: input.origin,
           providerCreatedAt: input.snapshot.paymentCreatedAt,
           observedAt: input.observedAt,
           sourceEventId: input.sourceEventId,
@@ -378,16 +384,20 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
       }
       const sourceEventId = input.sourceEventId;
       const operation = database.client.transaction(() => {
-        const existing = this.findBySourceEventId(sourceEventId);
+        const existing = this.findBySourceEventId(sourceEventId, input.origin);
         if (existing !== null) {
           const comparable = {
             snapshot: existing.snapshot,
+            origin: existing.origin,
             observedAt: existing.observedAt,
             sourceEventId: existing.sourceEventId,
             createdAt: existing.createdAt,
           };
           return {
-            status: sameCanonical(comparable, input)
+            status: sameCanonical(
+              withoutUndefined(comparable),
+              withoutUndefined(input),
+            )
               ? ("EXISTING" as const)
               : ("CONFLICT" as const),
             snapshot: existing,
@@ -401,12 +411,22 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
       return operation.immediate();
     },
 
-    findBySourceEventId(sourceEventId: string) {
+    findBySourceEventId(
+      sourceEventId: string,
+      origin: PaymentSnapshotObservation["origin"] = "WEBHOOK_EVIDENCE",
+    ) {
       const validatedId = eventIdSchema.parse(sourceEventId);
+      const validatedOrigin =
+        paymentSnapshotObservationSchema.shape.origin.parse(origin);
       const row = db
         .select()
         .from(paymentSnapshots)
-        .where(eq(paymentSnapshots.sourceEventId, validatedId))
+        .where(
+          and(
+            eq(paymentSnapshots.sourceEventId, validatedId),
+            eq(paymentSnapshots.snapshotOrigin, validatedOrigin),
+          ),
+        )
         .orderBy(asc(paymentSnapshots.snapshotSequence))
         .get();
       return row === undefined ? null : toPersistedPaymentSnapshot(row);
@@ -418,6 +438,25 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
         .select()
         .from(paymentSnapshots)
         .where(eq(paymentSnapshots.paymentId, validatedId))
+        .orderBy(
+          desc(paymentSnapshots.observedAt),
+          desc(paymentSnapshots.snapshotSequence),
+        )
+        .get();
+      return row === undefined ? null : toPersistedPaymentSnapshot(row);
+    },
+
+    findLatestReconciledByPaymentId(paymentId: string) {
+      const validatedId = paymentIdSchema.parse(paymentId);
+      const row = db
+        .select()
+        .from(paymentSnapshots)
+        .where(
+          and(
+            eq(paymentSnapshots.paymentId, validatedId),
+            eq(paymentSnapshots.snapshotOrigin, "PROVIDER_RECONCILED"),
+          ),
+        )
         .orderBy(
           desc(paymentSnapshots.observedAt),
           desc(paymentSnapshots.snapshotSequence),
@@ -491,6 +530,17 @@ function createRepositorySet(database: LocalDatabase): RecoverAiRepositorySet {
         .where(eq(recoveryCases.paymentId, validatedId))
         .get();
       return row === undefined ? null : toRecoveryCase(row);
+    },
+
+    listByOrderId(orderId: string) {
+      const validatedId = recoveryCaseRecordSchema.shape.orderId.parse(orderId);
+      return db
+        .select()
+        .from(recoveryCases)
+        .where(eq(recoveryCases.orderId, validatedId))
+        .orderBy(asc(recoveryCases.createdAt), asc(recoveryCases.caseId))
+        .all()
+        .map(toRecoveryCase);
     },
 
     updateIfVersionMatches(
