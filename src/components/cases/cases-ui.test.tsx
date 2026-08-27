@@ -235,6 +235,11 @@ describe("Milestone 9 cases UI", () => {
                 status: "PASSED",
                 reason: "The allowlisted action may proceed once.",
               },
+              {
+                ruleId: "ORIGINAL_PAYMENT_SATISFIED",
+                status: "NOT_APPLICABLE",
+                reason: "The trusted synthetic payment remains unpaid.",
+              },
             ],
           },
           finalSimulatedOutcome:
@@ -252,6 +257,8 @@ describe("Milestone 9 cases UI", () => {
     expect(html).toContain("Firewall final");
     expect(html).toContain("INTENT_MONEY_INTEGRITY");
     expect(html).toContain("ALL_GUARDRAILS_PASSED");
+    expect(html).toContain('aria-label="Status: NOT APPLICABLE"');
+    expect(html).toContain('class="policy-check-rule"');
     expect(html).toContain("Mock Payment Link created");
   });
 });

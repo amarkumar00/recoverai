@@ -111,7 +111,33 @@ describe("Milestone 14 dashboard evidence", () => {
         "ESCALATE_HUMAN",
       ],
       integrityRules: ["Exact amount and currency must match."],
-      recentDecisions: [],
+      recentDecisions: [
+        {
+          caseReference: "case_policy_layout_regression",
+          proposedAction: "SEND_PAYMENT_LINK",
+          finalAction: "ESCALATE_HUMAN",
+          outcome: "ESCALATED",
+          primaryRule: "INTENT_MONEY_INTEGRITY",
+          reason: "The proposed amount did not match trusted context.",
+          checks: [
+            {
+              ruleId: "IDENTITY_INTEGRITY",
+              status: "PASSED",
+              reason: "Trusted identities match.",
+            },
+            {
+              ruleId: "INTENT_MONEY_INTEGRITY",
+              status: "FAILED",
+              reason: "The proposed amount does not match.",
+            },
+            {
+              ruleId: "ALL_GUARDRAILS_PASSED",
+              status: "NOT_APPLICABLE",
+              reason: "Later rules cannot approve a rejected proposal.",
+            },
+          ],
+        },
+      ],
     });
     const policyHtml = renderToStaticMarkup(
       <PolicyFirewallPage model={policy} />,
@@ -121,6 +147,10 @@ describe("Milestone 14 dashboard evidence", () => {
     );
     expect(policyHtml).toContain("70%");
     expect(policyHtml).toContain("24 hours");
+    expect(policyHtml).toContain('aria-label="Status: PASSED"');
+    expect(policyHtml).toContain('aria-label="Status: FAILED"');
+    expect(policyHtml).toContain('aria-label="Status: NOT APPLICABLE"');
+    expect(policyHtml).toContain('class="policy-check-rule"');
 
     const auditHtml = renderToStaticMarkup(
       <AuditTrailPage

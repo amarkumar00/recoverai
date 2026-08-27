@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { DemoActionControls } from "@/components/cases/demo-action-controls";
+import { PolicyCheckStatus } from "@/components/policy/policy-check-status";
 import { Badge } from "@/components/ui/badge";
 import { formatInrFromPaise } from "@/lib/currency";
 import type { DemoCaseReadModel } from "@/orchestration/contracts";
@@ -210,8 +211,10 @@ export function CaseDetail({
               <div className="check-list">
                 {model.policy.checks.map((check) => (
                   <div key={check.ruleId} data-status={check.status}>
-                    <span>{check.status}</span>
-                    <strong>{check.ruleId}</strong>
+                    <PolicyCheckStatus status={check.status} />
+                    <strong className="policy-check-rule">
+                      {check.ruleId}
+                    </strong>
                   </div>
                 ))}
               </div>

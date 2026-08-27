@@ -981,6 +981,8 @@ a {
   *::before,
   *::after {
     scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
@@ -1300,19 +1302,52 @@ a {
 
 .check-list > div {
   display: grid;
-  grid-template-columns: 54px 1fr;
+  grid-template-columns: minmax(8.75rem, max-content) minmax(0, 1fr);
   gap: 8px;
   align-items: center;
-  font-size: 0.58rem;
+  font-size: 0.64rem;
 }
 
-.check-list span {
+.policy-check-status {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--ink-600);
+  font-weight: 750;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.policy-check-status > span[aria-hidden="true"] {
+  display: inline-grid;
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: none;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.7rem;
+}
+
+[data-status="PASSED"] .policy-check-status {
   color: var(--green-700);
 }
 
-.check-list strong {
+[data-status="FAILED"] .policy-check-status {
+  color: var(--red-700);
+}
+
+[data-status="NOT_APPLICABLE"] .policy-check-status {
+  color: var(--ink-600);
+}
+
+.policy-check-rule {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--ink-600);
   font-weight: 600;
+  line-height: 1.4;
 }
 
 .ev-card,
@@ -1931,11 +1966,11 @@ summary:focus-visible {
 }
 .policy-checks li {
   display: grid;
-  grid-template-columns: 64px 1fr;
+  grid-template-columns: minmax(8.75rem, max-content) minmax(0, 1fr);
   gap: 6px 8px;
   border-top: 1px solid var(--line);
   padding: 9px 0;
-  font-size: 0.58rem;
+  font-size: 0.64rem;
 }
 .policy-checks li p {
   grid-column: 2;
@@ -1999,11 +2034,19 @@ summary:focus-visible {
   font-size: 0.58rem;
 }
 .evaluation-identity dd {
+  min-width: 0;
   margin: 5px 0 0;
   overflow-wrap: anywhere;
   color: var(--ink-800);
   font-size: 0.62rem;
   font-weight: 650;
+}
+.evaluation-identity dd code {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  word-break: break-word;
 }
 .evaluation-metrics {
   margin: 14px 0;

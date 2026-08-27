@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting explicit approval to begin Milestone 18
+- **Current milestone:** Milestone 18 — Final Browser Verification and Release (Phase A in progress)
 - **Last completed milestone:** Milestone 17 — Documentation and Submission Package
-- **Next proposed milestone:** Milestone 18 — Final Browser Verification and Release (requires explicit approval)
+- **Next proposed milestone:** None — this is the final milestone
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -255,7 +255,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 18 — Final Browser Verification and Release
 
-- **Status:** `NOT_STARTED`
+- **Status:** `IN_PROGRESS`
 - **Outcome:** Submission-ready, browser-verified, and shareable application.
 - **Dependencies:** Milestones 1–17.
 - **Acceptance criteria:**

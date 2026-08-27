@@ -1,5 +1,6 @@
 import { LockKeyhole, Scale, ShieldCheck } from "lucide-react";
 
+import { PolicyCheckStatus } from "@/components/policy/policy-check-status";
 import { Badge } from "@/components/ui/badge";
 import type { PolicyReadModel } from "@/dashboard/contracts";
 
@@ -142,8 +143,10 @@ export function PolicyFirewallPage({ model }: { model: PolicyReadModel }) {
                   <ol className="policy-checks">
                     {decision.checks.map((check) => (
                       <li key={check.ruleId} data-status={check.status}>
-                        <span>{check.status}</span>
-                        <strong>{check.ruleId}</strong>
+                        <PolicyCheckStatus status={check.status} />
+                        <strong className="policy-check-rule">
+                          {check.ruleId}
+                        </strong>
                         <p>{check.reason}</p>
                       </li>
                     ))}

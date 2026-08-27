@@ -64,29 +64,34 @@ Current status: **no license has been selected**.
 
 ## Five-minute rehearsal
 
-- [ ] Presenter rehearses the exact `DEMO_SCRIPT.md` sequence under five minutes.
-- [ ] Reset is run immediately before rehearsal/recording.
-- [ ] Duplicate and out-of-order scenarios display expected counters.
-- [ ] Ten-times amount scenario stops at `INTENT_MONEY_INTEGRITY` with zero executor/link/contact effects.
-- [ ] Primary simulated loop reaches `LINK_CREATED`, then terminal `RECOVERED` after the fixed paid event.
-- [ ] Presenter says “simulated” with every financial result and correctly converts subunits to rupees.
-- [ ] Presenter states the 43 unresolved/escalated outcomes and synthetic/AI/Test Mode limitations.
-- [ ] Fallback tabs for README, golden report, and Judge Q&A are ready.
+- [x] Local presenter rehearsal followed the exact `DEMO_SCRIPT.md` sequence in 4 minutes 7 seconds.
+- [x] Reset was run immediately before the successful local rehearsal.
+- [x] Duplicate and out-of-order scenarios displayed expected counters.
+- [x] Ten-times amount scenario stopped at `INTENT_MONEY_INTEGRITY` with zero executor/link/contact effects.
+- [x] Primary simulated loop reached `LINK_CREATED`, then terminal `RECOVERED` after the fixed paid event.
+- [x] Local rehearsal used “simulated” with every financial result and correctly converted subunits to rupees.
+- [x] Local rehearsal stated the 43 unresolved/escalated outcomes and synthetic/AI/Test Mode limitations.
+- [x] README, golden report, and Judge Q&A fallback evidence was ready.
+
+The rehearsal above is local Phase A evidence. It is not a hosted recording or public video URL.
 
 ## Final verification before submission
 
-- [ ] Pull/checkout the exact final candidate and run `npm ci`.
-- [ ] Run `npm run check` with no credentials.
-- [ ] Run `npm run evaluation:check` and verify exact equality.
-- [ ] Run `shasum -a 256 docs/evaluation/golden-report.json` and confirm `0405a6621ba88f362877907ba7dea1624643696b92907ef5f4b13cf9bf22f30c`.
-- [ ] Run the final repository secret/generated-artifact scan.
-- [ ] Inspect `git status` and the staged file list.
-- [ ] Confirm no `.env.local`, database/WAL/SHM file, `node_modules`, `.next`, coverage, credential, secret, short URL, or customer data is tracked.
-- [ ] Confirm normal verification made zero live provider calls and created zero live Payment Links.
+- [x] Check out the exact local Phase A candidate in an isolated clone and run `npm ci`.
+- [x] Run `npm run check` with no credentials.
+- [x] Run `npm run evaluation:check` and verify exact equality.
+- [x] Run `shasum -a 256 docs/evaluation/golden-report.json` and confirm `0405a6621ba88f362877907ba7dea1624643696b92907ef5f4b13cf9bf22f30c`.
+- [x] Run the local Phase A repository secret/generated-artifact scan.
+- [x] Inspect `git status` and the staged file list.
+- [x] Confirm no `.env.local`, database/WAL/SHM file, `node_modules`, `.next`, coverage, credential, secret, short URL, or customer data is tracked.
+- [x] Confirm normal verification made zero live provider calls and created zero live Payment Links.
 - [ ] **Final CI result — `USER/REMOTE-SUPPLIED`:** link the passing CI run after the final public push.
 
 ## Milestone 18 release fields — not part of Milestone 17
 
+- [x] Complete local Phase A browser verification across all six pages at desktop, tablet, and mobile widths.
+- [x] Verify local production runtime logs, console output, keyboard focus, reduced motion, and deterministic scenario resets.
+- [x] Replace the policy-safety screenshot with the corrected deterministic Demo Mode evidence.
 - [ ] Perform final desktop/mobile browser verification on the deployed public URL.
 - [ ] Check deployed console/runtime logs and all six pages.
 - [ ] Confirm signed-webhook and Demo Mode safe failure behavior in the deployment environment.
