@@ -1,573 +1,223 @@
-# RecoverAI
+# RecoverAI — Payment Failure Digital Twin & Bounded Recovery Agent
 
-RecoverAI is a credential-free-by-default prototype for **Track 03 — AI Revenue Recovery** in the Razorpay AI Buildathon 2026. It explores how failed-payment events can become explainable, bounded recovery actions while measuring incremental **simulated** recovery across synthetic cases. An optional server-side Razorpay Test Mode adapter is isolated from the deterministic demo and never enables Live Mode.
+RecoverAI is a Track 03 payment-recovery control plane that diagnoses failed or uncertain payments, ranks only safe candidate actions, and lets deterministic financial policy decide what may execute.
 
-> The current build provides a complete judge-facing dashboard, one persisted credential-free vertical slice, six fixed interactive safety scenarios, a separate Razorpay-style public webhook boundary, and an optional bounded Test Mode adapter. Demo Mode does not call Razorpay, send a customer message, or move real money. Razorpay Test Mode is a sandbox and also moves no real money. The project is not production-ready. Every dashboard/evaluation rupee result is simulated fixture data—not real merchant revenue.
+> [!IMPORTANT]
+> **Prototype and simulated-results disclaimer:** the default application is a credential-free deterministic Demo Mode. Every dashboard rupee amount, recovery result, and held-out outcome is **simulated** synthetic data—not real merchant revenue, production uplift, or causal evidence. The project is not production-ready. Razorpay Live Mode is rejected. Optional Razorpay Test Mode support exists, but live verification was `NOT_RUN_CREDENTIALS_UNAVAILABLE` and zero live Payment Links were created during verification.
 
-## Requirements
+## The problem
 
-- Node.js 22 or newer
-- npm 10 or newer
+Payment failures have different causes: temporary provider downtime, insufficient funds, customer-correctable input, integration uncertainty, late success, and hard failure. Applying one generic intervention to every case can waste customer contacts, create duplicate-collection risk, or recover less value.
 
-No Razorpay or LLM credentials are needed for the default Demo Mode.
+## The solution
 
-## Held-out Digital Twin evaluation
+RecoverAI turns a failed-payment event into an explainable, bounded workflow:
 
-Milestone 13 adds a UI-independent, credential-free evaluation engine over the locked 100-case held-out Digital Twin. It compares the exact generic baseline—one generic Payment Link after 15 deterministic minutes for every eligible verified-unpaid failure—against the existing RecoverAI diagnosis, deterministic bounded mock scorer, and policy firewall. Both strategies fix their action before the same restricted evaluator reveals that selected action's hidden **simulated** outcome.
+1. Verify and deduplicate the event.
+2. Reconcile the current payment state instead of trusting event arrival order.
+3. Diagnose known structured errors deterministically.
+4. Rank only the diagnosis's fixed candidate actions.
+5. Apply hard money, state, contact, timing, and confidence rules.
+6. Execute an idempotent mock or optional Test Mode Payment Link operation.
+7. Stop after late payment success and record tamper-evident evidence.
 
-The locked run contains 100 unique payments, 112 unique provider events, 125 deliveries, and 13 ignored duplicate deliveries. Its fingerprint is `2065d1d50588ac7b8e8cf0782e7ae647c59bc02fedc71b856ca7c6d49f96ecdb`. The deterministic golden result reports INR 4,784,383 baseline simulated recovered subunits and INR 5,526,332 RecoverAI simulated recovered subunits, for INR +741,949 incremental simulated subunits. These are synthetic fixture results—not real revenue or production uplift.
+The result is a working credential-free demo, six adversarial scenarios, and a locked 100-case held-out Digital Twin evaluation.
 
-See the complete [human-readable golden evaluation](docs/evaluation/GOLDEN_REPORT.md) and [strict machine-valid report](docs/evaluation/golden-report.json). Focused evaluation checks run with:
+## Why AI is used
 
-```bash
-npx vitest run src/evaluation
+Known structured errors are handled deterministically. The AI boundary is reserved for comparing plausible interventions when more than one bounded choice remains.
+
+- It receives a deterministic candidate set and returns passive rankings only.
+- Provider output is untrusted and schema-validated.
+- The default `DeterministicMockAiProvider` is a seeded handcrafted test double, not a trained production model or external LLM.
+- It cannot provide amount, currency, recipient, API route, credentials, idempotency keys, or policy authority.
+- Trusted application code calculates expected value with checked integer-subunit arithmetic.
+- Malformed output, timeouts, provider errors, or insufficient context fail closed to human escalation.
+
+## Safety principle
+
+> **AI proposes; deterministic financial policy disposes.**
+
+Only six actions exist: `WAIT_FOR_RECOVERY`, `SEND_PAYMENT_LINK`, `REQUEST_METHOD_CHANGE`, `CANCEL_RECOVERY_ALREADY_PAID`, `STOP_NON_RETRYABLE`, and `ESCALATE_HUMAN`. The policy firewall—not AI—checks current payment authority, exact amount and currency, one-active-link limit, two-contact limit, 24-hour recovery window, 0.70 minimum confidence, and positive expected value before execution.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  W[Untrusted webhook] --> H[Raw-body HMAC verification]
+  H --> D[Event-ID deduplication]
+  D --> R[Current-state reconciliation]
+  R --> K[Deterministic diagnosis]
+  K --> A[Bounded AI ranking]
+  A --> P[Deterministic policy firewall]
+  P --> X[Idempotent action executor]
+  X --> M[Mock adapter]
+  X -. optional .-> T[Razorpay Test Mode adapter]
+  H --> U[Tamper-evident audit]
+  D --> U
+  R --> U
+  P --> U
+  X --> U
+  U --> V[Privacy-minimized merchant dashboard]
 ```
 
-The report documents every numerator, denominator, count rule, deterministic logical processing-time model, grouped result, limitation, and reproducibility rule. Evaluation runs have stable versioned identities and identical replay is idempotent in SQLite; conflicting content under the same identity fails closed.
+Webhook snapshots are historical evidence; fresh provider reconciliation is the current financial authority. AI output is an untrusted proposal; the deterministic firewall is the execution authority. Provider operations, SQLite persistence, and audit writes are explicitly non-atomic and uncertain outcomes are never automatically retried.
 
-## Local setup
+See [Architecture](docs/ARCHITECTURE.md) for trust boundaries, the separate evaluator-only flow, persistence design, and failure semantics.
+
+## Working product surfaces
+
+- **Overview** (`/`) — locked simulated headline metrics and baseline comparison.
+- **Live Event Stream** (`/events`) — duplicate, out-of-order, webhook-evidence, and reconciled-state views.
+- **Cases** (`/cases`) — one persisted bounded recovery loop plus six fixed safety scenarios.
+- **Policy Firewall** (`/policy`) — read-only limits, six-action allowlist, and ordered decisions.
+- **Audit Trail** (`/audit`) — verified local SHA-256 hash chain and anchor status.
+- **Digital Twin Evaluation** (`/evaluation`) — exact results, all seven classes, 7×7 confusion matrix, and honest exceptions.
+
+![RecoverAI overview showing locked simulated recovery metrics](docs/assets/screenshots/overview.jpg)
+
+![RecoverAI policy firewall showing the blocked ten-times amount proposal](docs/assets/screenshots/policy-safety.jpg)
+
+![RecoverAI Digital Twin evaluation showing baseline and RecoverAI simulated recovery](docs/assets/screenshots/evaluation.jpg)
+
+## Exact held-out simulated results
+
+The locked batch contains **100 held-out synthetic payments**, **112 unique provider events**, **125 deliveries**, and **13 duplicate deliveries**. Money is stored and aggregated in INR subunits; rupee conversions below divide by 100.
+
+| Metric                                         |                                       Locked result |
+| ---------------------------------------------- | --------------------------------------------------: |
+| Simulated revenue initially at risk            | INR 11,883,796 subunits / **₹118,837.96 simulated** |
+| Baseline simulated recovery                    |   INR 4,784,383 subunits / **₹47,843.83 simulated** |
+| RecoverAI simulated recovery                   |   INR 5,526,332 subunits / **₹55,263.32 simulated** |
+| Incremental simulated recovery                 |     INR +741,949 subunits / **₹7,419.49 simulated** |
+| RecoverAI simulated recovery rate              |                                                 42% |
+| Root-cause accuracy                            |              100% on handcrafted synthetic fixtures |
+| Action-selection accuracy                      |                                                 95% |
+| Customer contacts avoided                      |                                                  69 |
+| Unsafe actions blocked or redirected           |                                                  19 |
+| Human escalation rate                          |                                                 19% |
+| Honest unresolved/escalated simulated outcomes |                                                  43 |
+| Simulated false-positive intervention cost     |           INR 3,436 subunits / **₹34.36 simulated** |
+
+The primary comparison is `₹55,263.32 − ₹47,843.83 = ₹7,419.49 simulated`. The baseline is not a zero-value straw man: at exactly 15 deterministic minutes it sends one generic Payment Link to every eligible verified-unpaid case, reusing an active link and stopping or escalating unsafe cases.
+
+- Dataset fingerprint: `2065d1d50588ac7b8e8cf0782e7ae647c59bc02fedc71b856ca7c6d49f96ecdb`
+- Golden JSON SHA-256: `0405a6621ba88f362877907ba7dea1624643696b92907ef5f4b13cf9bf22f30c`
+- [Human-readable report](docs/evaluation/GOLDEN_REPORT.md) · [machine-valid JSON](docs/evaluation/golden-report.json)
+
+## Five-minute quick demo
+
+1. Open **Digital Twin Evaluation** and establish the locked 100-case simulated result.
+2. In **Cases**, run **Duplicate webhook delivery** and **Out-of-order payment events**.
+3. Run **Invalid AI-proposed 10× amount**, then open **Policy Firewall** or the unsafe case detail to show `INTENT_MONEY_INTEGRITY` blocking execution.
+4. Start the primary bounded recovery, inspect diagnosis → ranking → policy → mock link, then select **Simulate mock link paid**.
+5. Close on the Overview: ₹7,419.49 incremental simulated recovery, 69 contacts avoided, 19 unsafe actions blocked/redirected, and 43 honest unresolved/escalated simulated outcomes.
+
+Use the exact timestamps, narration, expected states, and fallbacks in the [five-minute demo script](docs/submission/DEMO_SCRIPT.md).
+
+## Credential-free setup
+
+Prerequisites: Node.js 22+ and npm 10+.
 
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
 npm run db:migrate
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The six product surfaces are:
-
-- `/` — validated golden-report overview
-- `/events` — privacy-safe event and reconciliation stream
-- `/cases` — persisted vertical slice plus six deterministic safety scenarios
-- `/policy` — read-only active limits and decision evidence
-- `/audit` — verified tamper-evident hash chain
-- `/evaluation` — full held-out report, grouped results, 7×7 matrix, and honest exceptions
-
-### Five-minute deterministic demo
-
-1. Start the primary bounded recovery in **Cases**, inspect its diagnosis, AI ranking, expected value, ordered policy checks, mock link, and tamper-evident audit evidence, then simulate the mock link being paid.
-2. Run the six fixed scenario cards: duplicate delivery, out-of-order events, late success, invalid 10× AI amount, AI timeout, and downtime dependency unavailable.
-3. Open **Live Event Stream** to compare webhook snapshot order with authoritative current payment state.
-4. Open **Policy Firewall** and **Audit Trail** to show why the action was allowed, blocked, stopped, or escalated.
-5. Open **Digital Twin Evaluation** to show the complete locked 100-case simulated result, including 43 unresolved/escalated outcomes and false-positive simulated cost.
-
-The scenario route accepts only one of six server-owned keys. It accepts no amount, action, event ID, payload, provider route, or customer field. The reset route requires the exact fixed confirmation token and works only in Demo Mode.
-
-Reset deletes only allowlisted demo operational fixtures and stored scenario projections in one SQLite transaction. It deliberately preserves the tamper-evident audit chain instead of rewriting history. Identical deterministic audit entry IDs replay safely when a reset fixture is run again. Unknown database records, migrations, user files, evaluation runs, the golden report, and the locked fingerprint are untouched.
-
-The environment file is optional because safe defaults are built in:
-
-- `APP_MODE=demo`
-- `DATABASE_PATH=./data/recoverai.db`
-
-`RAZORPAY_WEBHOOK_SECRET` is optional. Without it, the dashboard and internal
-synthetic demo remain fully usable, while the public webhook endpoint returns a
-safe `WEBHOOK_NOT_CONFIGURED` response without initializing ingestion.
-
-## Razorpay-style webhook boundary
-
-`POST /api/webhooks/razorpay` is the only public provider-event boundary. It
-follows Razorpay's documented validation model:
-
-- `X-Razorpay-Signature` is checked as an HMAC-SHA256 hex digest using the
-  exact, untouched request bytes as the message and the server-only webhook
-  secret as the key.
-- Signature comparison is timing-safe after strict hex validation. Missing,
-  malformed, or invalid signatures are rejected before JSON parsing, database
-  persistence, downstream processing, or audit writes.
-- `x-razorpay-event-id` is the durable idempotency boundary. The first valid
-  delivery is persisted and audited once; an identical sequential or concurrent
-  delivery returns success without another downstream effect. Reusing the ID
-  with different raw content fails closed as a conflict.
-- Only fields accepted by the external event schema are copied into strict
-  internal domain contracts. Raw bodies, customer contact details, signatures,
-  secrets, stack traces, and database details are never returned or copied into
-  the audit log.
-- Request bodies are capped at 256 KiB. Responses contain only a stable status
-  and safe result code and are marked `no-store`.
-
-The header names and raw-body algorithm come from Razorpay's official
-[Validate and Test Webhooks](https://razorpay.com/docs/webhooks/validate-test/)
-documentation. To enable the boundary locally, provide a non-public server
-environment value:
+Open <http://localhost:3000>. No Razorpay or LLM credential is required. A fresh isolated database can be migrated without touching the default database:
 
 ```bash
-RAZORPAY_WEBHOOK_SECRET=replace_with_test_webhook_secret
+DATABASE_PATH=./data/recoverai-fresh.db npm run db:migrate
 ```
 
-Do not commit that value. A verified first-seen original-payment event now
-preserves its webhook snapshot as historical evidence and performs a fresh
-lookup through the narrow provider capability port. The lookup result is
-stored separately as provider-reconciled authority. A stale delivery can add
-history but cannot reactivate recovery, increment contact count, or create a
-Payment Link. The default public adapter intentionally has no provider
-fixtures, so its lookup returns a deterministic unavailable result and starts
-no recovery. With explicit complete Test Mode configuration, current-state
-reconciliation instead uses the optional server-side adapter below.
-
-Prototype limitations remain explicit: the atomic event claim and the
-tamper-evident audit append are two local operations, not one cross-component
-transaction. A process failure between them requires operator repair rather
-than automatic replay of downstream effects. The route also does not yet add
-deployment rate limiting, webhook-secret rotation, multi-node database
-coordination, automatic repair/replay after a first-seen downstream failure,
-or multi-node durable operation.
-
-## Optional Razorpay Test Mode
-
-The Test Mode adapter is deliberately narrow and server-only. It supports only
-these documented operations:
-
-- [`GET /v1/payments/:id`](https://razorpay.com/docs/api/payments/fetch-with-id/) to fetch current payment state.
-- [`GET /v1/payments/downtimes`](https://razorpay.com/docs/api/payments/downtime/fetch-all) to read compatible structured downtime context.
-- [`POST /v1/payment_links`](https://razorpay.com/docs/api/payments/payment-links/create-standard/) to create one bounded Standard Payment Link.
-- [`GET /v1/payment_links/:id`](https://razorpay.com/docs/api/payments/payment-links/fetch-id-standard/) to fetch a known link.
-- [`POST /v1/payment_links/:id/cancel`](https://razorpay.com/docs/api/payments/payment-links/cancel-standard/) to cancel a known, created, zero-paid link.
-
-The API origin is fixed to `https://api.razorpay.com`; callers, AI output, and
-webhooks cannot choose a route. Requests use server-side Basic Authentication,
-bounded timeouts, bounded JSON responses, strict identifiers, sanitized errors,
-and no automatic retry. Write timeouts are outcome-uncertain and consume the
-local budget.
-
-### Private local configuration
-
-Keep these values only in an ignored `.env.local`; never use `NEXT_PUBLIC_` for
-any Razorpay secret:
+For a production-mode local check:
 
 ```bash
-APP_MODE=razorpay_test
-RAZORPAY_TEST_KEY_ID=rzp_test_replace_with_local_key_id
-RAZORPAY_TEST_KEY_SECRET=replace_with_local_test_key_secret
-RAZORPAY_WEBHOOK_SECRET=replace_with_local_test_webhook_secret
-RAZORPAY_TEST_PAYMENT_ID=pay_replace_with_known_test_payment
-RECOVERAI_ALLOW_TEST_MODE_WRITES=false
-```
-
-`APP_MODE=razorpay_test` requires a complete Test Mode key pair. Partial
-configuration fails validation; `rzp_live_` keys are rejected. Reads do not
-require write opt-in. Set `RECOVERAI_ALLOW_TEST_MODE_WRITES=true` only for one
-deliberately controlled sandbox check, then return it to `false`. The local
-database permits at most three unique Test Mode Payment Link creation attempts
-in total; an uncertain timeout still consumes one. This cap does not claim to
-know the merchant account's complete external Payment Link usage.
-
-Standard links use trusted payment amount/currency and a stable server-created
-reference, disable partial payments, notifications, and reminders, omit all
-customer contact fields, and expire within the 24-hour recovery window with at
-least 15 minutes remaining. Payment and case state are rechecked before create.
-The returned `short_url` is treated as sensitive Test Mode operational data: it
-is not persisted, logged, audited, or exposed in general dashboard read models.
-Digital Twin evaluation never invokes this adapter or creates Test Mode links.
-
-Payment, order, downtime, and Payment Link events continue through the exact
-raw-body signature boundary and durable provider event-ID deduplication.
-Unknown valid events return `UNSUPPORTED_EVENT_IGNORED` without persistence or
-downstream action. A known Test Mode link can recover a case only when its ID,
-reference, amount, currency, and fully-paid amount match trusted local data.
-Partial payment stops automation in human review and remains blocking to avoid
-duplicate collection.
-
-Before a controlled check, migrate the local database and create a small known
-Test Mode payment in the Razorpay Dashboard. RecoverAI never automates hosted
-checkout or fabricates a paid webhook. After the check, cancel only a link still
-in `created` state with zero paid amount, remove private credentials from the
-local environment, and keep `.env.local` uncommitted. The official
-[API authentication/Test Mode guidance](https://razorpay.com/docs/api/) and
-[Test Mode quickstart](https://razorpay.com/docs/payments/quickstart/) are the
-authority for sandbox behavior.
-
-No automatic capture, original-payment retry, refund, subscription, Route,
-Vulcan, QR/UPI-specific link, customer messaging, background worker, arbitrary
-Razorpay request, or Live Mode behavior exists.
-
-## Local database and migrations
-
-The application uses SQLite through `better-sqlite3` and Drizzle ORM. Database schema is never created implicitly during application startup. Apply the committed migrations explicitly:
-
-```bash
-npm run db:migrate
-```
-
-This uses `DATABASE_PATH` from the environment, defaulting to `./data/recoverai.db`. To prove a brand-new database can be built without deleting an existing one, select a fresh path:
-
-```bash
-DATABASE_PATH=./data/recoverai-clean.db npm run db:migrate
-```
-
-Verify that the committed migration remains consistent with the Drizzle table definitions and can be reapplied safely:
-
-```bash
-npm run db:check
-```
-
-Migration sources are committed under `drizzle/`; Drizzle table definitions live in `src/lib/db/schema.ts`, and `drizzle.config.ts` records the schema/output locations. Migration application uses Drizzle's programmatic migrator. Migration authoring is intentionally review-first: update the Drizzle schema and committed SQL together, update the journal, then run `npm run db:check`. This avoids an unaudited runtime schema-sync path.
-
-Local database, WAL, and shared-memory files under `data/` are ignored by Git. Tests create isolated temporary file databases entirely from committed migrations and never use the developer database.
-
-SQLite connections enforce foreign keys, use a five-second busy timeout, and enable WAL for file databases. These settings make competing idempotency claims safer while preserving credential-free local operation.
-
-### Persistence boundaries
-
-The storage layer contains ten record families plus one audit-chain head anchor: webhook events, payment snapshots, recovery cases, AI recommendations, policy decisions, recovery actions, Payment Links, audit entries, simulated evaluation runs, fixed demo-scenario results, and `audit_chain_state`. Repository interfaces live under `src/repositories/` and have no React, Next.js route, or UI dependency.
-
-Database rows intentionally use SQLite-friendly representations:
-
-- Money and counts are constrained integer columns in currency subunits.
-- Booleans are stored as constrained SQLite integers.
-- AI confidence is indexed as integer millionths while the validated domain model remains a `0..1` number.
-- Strict domain documents are serialized as JSON only where preserving the complete validated structure is useful.
-- Every serialized document is parsed and revalidated through the Milestone 2 Zod schema when read; corrupt data fails closed.
-- Payment snapshots carry an explicit `WEBHOOK_EVIDENCE` or
-  `PROVIDER_RECONCILED` origin. A database uniqueness constraint permits one
-  snapshot of each origin per source event, while provider-reconciled lookups
-  alone supply current recovery authority.
-
-## Tamper-evident audit chain
-
-`src/audit/` owns a real SHA-256 hash chain identified by `RECOVERAI_GLOBAL_AUDIT` at version `RECOVERAI_AUDIT_V1`. Callers submit only a strict passive append command; they cannot supply a sequence, predecessor hash, or current hash. The service validates a privacy-safe metadata allowlist, assigns the next insertion sequence, hashes canonical UTF-8 JSON, inserts the entry, and advances the local head anchor in one SQLite immediate transaction.
-
-The chain starts at sequence `1` with a null predecessor. Every later entry contains the prior digest. Verification revalidates stored schemas and metadata, recomputes every digest in sequence order, checks continuity and duplicate IDs, and compares the final entry with the stored count and head hash. An optional retained checkpoint can detect a database rewrite that no longer matches an earlier trusted head. Identical entry-ID replays are idempotent even after newer appends; content changes conflict, and a corrupt chain fails closed.
-
-The public passive repository exposes ordered reads only. Audit writes go through `createSqliteAuditChain`, so ordinary application callers cannot append pre-hashed records. Raw SQL access remains internal to this storage implementation.
-
-This is **tamper-evident**, not immutable storage. Editing, insertion, deletion, or reordering is detected while the local anchor remains trustworthy; deleting the final row is detected by the anchored count and head. An attacker able to rewrite every entry and the local anchor could construct a different locally valid chain. Retaining a checkpoint outside that database strengthens detection. Audit input intentionally excludes raw webhook payloads, prompts, stack traces, credentials, email addresses, phone numbers, and arbitrary metadata.
-
-## Deterministic recovery lifecycle
-
-The pure state machine in `src/recovery/state-machine.ts` owns transition legality; repositories remain storage-only. The active states are `DETECTED`, `VERIFYING`, `DIAGNOSED`, `AWAITING_POLICY`, `WAITING`, and `LINK_CREATED`. The MVP terminal states are `RECOVERED`, `STOPPED`, `ESCALATED`, and `ERROR_SAFE`.
-
-The primary workflow is:
-
-```text
-DETECTED → VERIFYING → DIAGNOSED → AWAITING_POLICY
-                                      ├─→ WAITING
-                                      └─→ LINK_CREATED
-```
-
-Every active state has explicit safe exits to the applicable terminal states. `WAITING → VERIFYING` is the only intentional re-verification loop. No terminal state can reactivate recovery.
-
-Same-state requests are explicit idempotent no-ops when their trusted payment context is safe. They do not increment the case version. A paid, unavailable, or conflicting context cannot use a no-op to conceal an unsafe active-recovery request.
-
-Transitions require a trusted payment-satisfaction result. Verified authorization, capture, or order-paid evidence permits only a recovered/stopped path. Entering an active state requires a verified unpaid result, and marking a case recovered requires verified satisfaction. The persistence service performs one version-aware update and returns typed not-found, stale-version, lost-race, and domain-rejection outcomes without mutating rejected cases.
-
-## Deterministic known-error diagnosis
-
-The known-error mapper in `src/diagnosis/` uses this fixed precedence:
-
-1. Verified authorization, capture, or order-paid state
-2. Unavailable or conflicting trusted payment state
-3. Compatible verified active downtime
-4. Exact documented structured `error_reason` rules
-5. Unavailable downtime context
-6. Conservative ambiguity
-
-Mappings use exact identifiers from Razorpay's [error structure](https://razorpay.com/docs/errors/) and [payment error list](https://razorpay.com/docs/errors/payments/list/). Free-form descriptions and fuzzy substring matching are never used. Unknown, conflicting, and unavailable input escalates instead of being guessed as recoverable.
-
-Diagnosis returns only the seven canonical failure classes and deterministic candidate actions from the six-action allowlist. Candidate order exists only for reproducibility; it is not AI ranking or execution authority. Existing recovery-link context removes a second `SEND_PAYMENT_LINK` candidate. Diagnostic evidence uses fixed sanitized messages and never copies free-form descriptions or customer contact information.
-
-## Bounded deterministic recommendation scorer
-
-The provider-independent recommendation boundary lives in `src/ai/`. It receives validated payment context and deterministic diagnosis candidates, but the provider-visible input deliberately excludes authoritative amount, currency, customer hash, payment/order/link identifiers, API routes, idempotency keys, recipients, policy authority, and hidden Digital Twin outcomes. Provider output is treated as `unknown` until a strict schema accepts it.
-
-The default `DeterministicMockAiProvider` is a credential-free seeded demo/test double with transparent handcrafted estimates. It is **not a trained production model** and its output is not evidence of real payment uplift. Its conservative base behaviour is:
-
-- Temporary downtime usually gives `WAIT_FOR_RECOVERY` the highest estimate.
-- Insufficient funds usually favours `REQUEST_METHOD_CHANGE` over a new link.
-- Customer-correctable context generally favours a bounded link or method change.
-- Network uncertainty keeps recovery estimates conservative.
-- Late success and non-retryable diagnoses contain only their deterministic cancel/stop candidate; those non-recovery actions receive zero recovery probability.
-- Ambiguous or unavailable context bypasses scoring and escalates safely.
-
-Relevant base recovery-probability estimates, before bounded seed variation, are:
-
-| Diagnosed class                 | Candidate base estimates                                 |
-| ------------------------------- | -------------------------------------------------------- |
-| Downtime/transient              | wait 78%, human escalation 8%                            |
-| Insufficient funds              | method change 56%, bounded link 42%, human escalation 8% |
-| Customer-correctable            | bounded link 64%, method change 57%, human escalation 8% |
-| Network/integration uncertainty | wait 40%, human escalation 18%                           |
-| Late success                    | cancel existing recovery 0% recovery probability         |
-| Non-retryable                   | stop recovery 0% recovery probability                    |
-| Ambiguous/unavailable           | provider bypass; human escalation fallback               |
-
-Any seeded probability variation is reproducible and bounded to ±10,000 millionths. The same normalized input and seed produce the same logical provider output; the mock uses no current time, randomness source, network call, or environment credential.
-
-Expected value is calculated only by trusted application code:
-
-```text
-floor(verified unpaid subunits × probability millionths / 1,000,000)
-− contact cost
-− friction penalty
-− duplicate-payment-risk penalty
-− operational cost
-```
-
-All monetary inputs and outputs are integer currency subunits. Multiplication and penalty aggregation use `bigint`; division rounds down to the nearest subunit, and results outside JavaScript's safe-integer range fail closed. Rankings use expected value descending, probability descending, total penalty ascending, then the canonical six-action order.
-
-Timeout, malformed output, provider failure, insufficient context, invalid candidate sets, and unsafe arithmetic return a schema-valid `ESCALATE_HUMAN` recommendation with sanitized evidence. The boundary performs no retry, action execution, case transition, repository write, customer contact, or Razorpay call. The deterministic policy firewall remains the final passive decision authority: **AI proposes; deterministic financial policy disposes.**
-
-## Deterministic policy firewall
-
-The pure firewall in `src/policy/` validates a strict internal action intent against trusted case, payment-satisfaction, diagnosis, AI-scoring, Payment Link, contact, recovery-window, and policy-configuration context. Unknown or malformed raw actions return a typed `INVALID_INPUT` result without fabricating an allowlisted action. Valid inputs produce one strict decision:
-
-- `APPROVED`: every rule passed and the final action exactly matches the proposed action.
-- `BLOCKED`: the plan is inconsistent or malformed; no final action is authorized.
-- `ESCALATED`: automation is stopped and the only final action is `ESCALATE_HUMAN`.
-- `STOPPED`: proactive recovery ends with `CANCEL_RECOVERY_ALREADY_PAID` or `STOP_NON_RETRYABLE`.
-
-Canonical defaults are:
-
-```text
-MAX_PAYMENT_LINKS_PER_ORDER = 1
-MAX_CUSTOMER_CONTACTS = 2
-MAX_RECOVERY_WINDOW_MILLISECONDS = 86,400,000 (24 hours)
-MIN_AI_CONFIDENCE_MILLIONTHS = 700,000 (0.70)
-```
-
-The exact 24-hour boundary is inclusive: an evaluation at `start + 86,400,000 ms` remains eligible, while one millisecond later is expired. Confidence is conservatively converted to millionths with floor rounding; exactly `0.70` passes and any value below it fails. These trusted defaults never come from provider output.
-
-Rule precedence is fixed: identity integrity → conflicting/partial payment state → verified success stopping → dependency availability → intent money integrity → Payment Link limits → contact limit → recovery window → AI boundary → expected value → diagnosis compatibility → approval. Earlier safety evidence overrides later AI ranking and economics. New-link amount/currency must exactly match verified unpaid money; one blocking link or the total-link limit prevents another link; partially paid or duplicate-payment states escalate; authorized/captured/order-paid state stops outreach and cancels only an eligible unpaid link. Non-positive expected value stops proactive recovery.
-
-Every decision contains ordered `PASSED`, `FAILED`, or `NOT_APPLICABLE` checks and one exact primary rule. Evaluation uses injected timestamps and performs no persistence, case transition, audit write, network request, Razorpay call, Payment Link operation, customer contact, retry, random operation, or ambient clock read. Future orchestration will persist and execute permitted decisions.
-
-## Idempotent mock recovery execution
-
-The provider-independent capability port in `src/ports/razorpay.ts` exposes only the narrow operations needed by the locked MVP: fetch current payment state, inspect downtime, and create, fetch, or cancel a Payment Link. It exposes no original-payment retry, capture, refund, routing, subscription, messaging, or arbitrary request capability. The default `DeterministicMockRazorpayAdapter` uses only injected fixture state—no credentials, network, random source, or ambient clock—and returns defensive, strictly validated results.
-
-`RecoveryActionExecutor` accepts a strict command containing the trusted case, deterministic policy decision, matching action intent, injected execution timestamp, and bounded timeout. AI output never reaches this boundary directly and cannot construct provider operations. Before creating a simulated Payment Link, the executor fetches the current payment and verifies payment ID, order ID, integer amount, currency, and unpaid status. Authorization or capture stops creation. Existing safe links are reused, while conflicting or partially paid links fail safe or require review.
-
-The executor also re-reads the persisted case state and optimistic version
-after the payment lookup and immediately before Payment Link creation. An
-earlier policy decision cannot create a link after concurrent reconciliation
-has moved the case to a terminal state.
-
-Execution identities are stable SHA-256-derived references in the versioned `recoverai_exec_v1` namespace. Recovery actions use a compare-and-set lifecycle:
-
-```text
-REQUESTED → STARTED → SUCCEEDED | FAILED_SAFE | CANCELLED
-```
-
-Only the successful claim may begin an adapter operation. Replays return the persisted result, concurrent claims cannot create a second link, and uncertain timeouts are recorded without automatic retry. Mock cancellation first fetches the latest link state and never repeats cancellation for paid, partially paid, expired, or already-cancelled links.
-
-Every material execution stage is appended to the tamper-evident audit chain with sanitized operational identifiers and fixed explanations. The initial audit append must succeed before any adapter call. SQLite transactions are never held across an awaited adapter operation; consequently the external mock operation, local persistence, and audit append are not one atomic transaction. If audit completion fails after an operation, the executor returns `AUDIT_INCOMPLETE`, preserves the observed local result where available, and does not automatically repeat the financial operation.
-
-All Payment Links and financial outcomes produced by this adapter are **simulated**. The implementation makes no real Razorpay request, sends no customer message, and does not claim production readiness or recovered merchant revenue.
-
-## Current-state reconciliation and late-success stopping
-
-`src/reconciliation/` is UI-independent and depends only on repositories, the
-narrow provider capability port, and the audit appender. For original-payment
-events it fetches current payment state, then checks payment ID, order ID,
-integer subunit amount, currency, and the applicable case/order relationship.
-Unavailable, malformed, unknown, mismatched, or impossible regressing state
-fails closed without activating recovery.
-
-Provider-reconciled success is monotonic: once authorization or capture is
-trusted, a later fetched unpaid state cannot downgrade it. Captured authority
-cannot be downgraded to authorized. Webhook arrival order is retained only as
-historical evidence. Reconciliation replays and concurrent attempts converge
-through snapshot uniqueness, optimistic case versions, idempotent action
-claims, and the one-blocking-link database constraint.
-
-When the original payment is currently authorized/captured—or a uniquely
-related `order.paid` event is corroborated by current payment success—the case
-moves through the existing legal `STOPPED` path. An existing simulated recovery
-link is fetched before cancellation. Only a fetched `CREATED` link is cancelled;
-paid, partially paid, expired, or already-cancelled links are never cancelled.
-Unavailable link state leaves the case stopped and records a safe-review
-outcome. Replays and competing stop attempts do not repeat cancellation. The
-reconciler never captures an authorized payment and never retries the original
-payment.
-
-## Credential-free vertical-slice demo
-
-The Cases workspace runs two fixed synthetic scenarios from committed application code. It accepts no user-supplied payment amount, recipient, route, or arbitrary action.
-
-Primary recovery flow:
-
-1. Select **Start bounded recovery** for the primary case.
-2. RecoverAI claims a **Trusted Synthetic Demo Event** with signature status `NOT_CHECKED`.
-3. The persisted workflow reaches `LINK_CREATED` after exact diagnosis, deterministic seeded ranking, policy approval, and one idempotent mock Payment Link execution.
-4. Inspect the case to see the simulated expected-value calculation, ordered policy checks, mock-link record, contact count, and verified tamper-evident timeline.
-5. Select **Simulate mock link paid**. A fixed synthetic paid event moves the link to `PAID`, the case to terminal `RECOVERED`, and disables further recovery.
-
-Safety proof:
-
-1. Select **Run fixed 10× safety probe**.
-2. The scenario proposes exactly ten times its verified simulated amount.
-3. The deterministic firewall escalates at `INTENT_MONEY_INTEGRITY` before any executor, Payment Link, or contact action exists.
-
-The POST controls under `/api/demo/recovery/` require a strict empty JSON object and are rejected when `APP_MODE` is not `demo`. They are internal demo controls, not merchant APIs or webhook endpoints. Repeated start, completion, and unsafe-probe requests resume from validated persisted state and do not duplicate the logical action, link, paid event, recommendation, policy decision, contact count, or final transition.
-
-The credential-free demo still bypasses the external webhook trust boundary by design: its events are created inside the application as trusted synthetic fixtures and remain visibly labelled `NOT_CHECKED`. They never masquerade as events accepted through the signature-verified public route.
-
-## Seeded Payment Failure Digital Twin
-
-`src/digital-twin/` provides a credential-free, database-independent synthetic
-dataset generator at version
-`recoverai-payment-failure-digital-twin-v1`. It never reads ambient time,
-unseeded randomness, network state, environment credentials, or machine-specific
-state.
-
-Two namespaces keep scorer development separate from evaluation:
-
-- Development seed `recoverai-development:2026-v1` produces 28 scorer-visible
-  synthetic cases for deterministic development and contract testing.
-- Held-out seed `recoverai-held-out:2026-v1` produces the locked 100-payment
-  evaluation batch. Its default full-batch SHA-256 fingerprint is
-  `2065d1d50588ac7b8e8cf0782e7ae647c59bc02fedc71b856ca7c6d49f96ecdb`.
-
-The held-out batch contains exactly:
-
-| Synthetic ground-truth class      | Cases |
-| --------------------------------- | ----: |
-| Downtime or transient             |    25 |
-| Insufficient funds                |    20 |
-| Customer-correctable              |    15 |
-| Network/integration uncertainty   |    15 |
-| Late-authorized or later-captured |    10 |
-| Hard/non-retryable                |    10 |
-| Ambiguous, requiring human review |     5 |
-
-Those 100 payments create 112 unique synthetic provider events and exactly 125
-deliveries: 5 sequential duplicates, 8 non-adjacent duplicates, and 12
-legitimate success events. The late-success group includes 4 late
-authorizations, 3 later captures, 2 captured-before-authorized delivery cases,
-and 1 stale-failure-after-current-capture case. Duplicate deliveries preserve
-the same provider event ID, normalized content, and content fingerprint;
-out-of-order events retain distinct provider event IDs and creation order.
-
-Every case validates through the existing strict payment, event, diagnosis,
-payment-satisfaction, money, identity, and timestamp contracts. Synthetic
-customer references visibly use the `synthetic-non-production:` namespace. No
-names, emails, phone numbers, addresses, card details, tokens, credentials,
-customer messages, raw signed request bodies, or real merchant data are
-generated.
-
-The public selection batch contains payment features and deterministic
-diagnosis only. Per-case ground-truth labels, allowed-action labels, and one
-hidden **simulated** outcome for each of the six canonical actions live behind
-an evaluator-only module. The existing provider schema remains strict, and
-lint plus leakage tests prevent AI, diagnosis, policy, and recovery modules
-from importing evaluator-only material. An outcome can be revealed only after
-a case ID and already-selected canonical action are supplied.
-
-The transparent outcome simulator uses a seeded SHA-256 threshold against
-fixed class/action assumptions. Its main simulated recovery probabilities are:
-downtime wait 82%; insufficient-funds method change 61% and link 47%;
-customer-correctable link 69% and method change 59%; network uncertainty wait
-47%. Individual held-out results remain hidden. Late-success, non-retryable,
-and ambiguous cases produce bounded simulated stop/escalation outcomes rather
-than synthetic recovery uplift. These handcrafted assumptions do not model
-Razorpay's production network or establish real revenue, accuracy, or expected
-production performance.
-
-Milestone 12 intentionally generates no baseline comparison, aggregate metric,
-incremental simulated revenue result, dashboard evaluation view, database
-record, webhook processing, recovery action, or Payment Link. Those evaluation
-calculations remain Milestone 13 work.
-
-## Verification
-
-Normal verification is deterministic, credential-free, and makes zero external
-financial API calls. Run each check independently:
-
-```bash
-npm run format:check
-npm run lint
-npm run typecheck
-npm run db:check
-npm run integrity:check
-npm test
 npm run build
-npm run audit:dependencies
-npm run hygiene:check
-npm run smoke:production
+npm run start
 ```
 
-Or run the complete local verification sequence:
+See [Setup and operations](docs/SETUP_AND_OPERATIONS.md) for reset, environment, webhook, clean-checkout, and optional Test Mode instructions.
+
+## Evaluation reproduction
+
+```bash
+npm run evaluation:check
+```
+
+This regenerates the locked evaluation in memory and requires exact equality with the committed report. It uses no network, credentials, live Razorpay call, customer message, or real financial action.
+
+## Automated verification
 
 ```bash
 npm run check
 ```
 
-Milestone 16's focused reliability suite is available as:
+The complete command checks documentation links/locks, formatting, lint, strict types, fresh/upgraded migrations, dataset and golden-report integrity, the deterministic test suite, production build, high-severity production dependency audit, repository hygiene, and a credential-free production HTTP smoke.
 
-```bash
-npm run test:hardening
-```
+At the Milestone 16 evidence lock, **652 tests across 51 files passed**. See the [verification matrix](docs/VERIFICATION_MATRIX.md). Normal CI uses Demo Mode, no secrets, and zero external financial calls.
 
-The requirement-to-test index is recorded in
-[`docs/VERIFICATION_MATRIX.md`](docs/VERIFICATION_MATRIX.md). GitHub Actions
-runs Node.js 22 with `npm ci`, the full credential-free suite, fresh and
-upgraded migration checks, the locked Digital Twin/golden-report integrity
-checks, production build, high-severity production dependency audit, generated
-artifact/privacy checks, and an isolated production HTTP smoke. The smoke uses
-its own temporary SQLite database and verifies all six pages plus safe webhook
-and unsupported-method behavior.
+## Optional Razorpay Test Mode
 
-An optional, manually invoked read-only Test Mode connectivity check is kept
-outside normal CI:
+The server-only adapter is disabled by default and implements only documented Test Mode operations: payment fetch, downtime fetch, Standard Payment Link create/fetch/cancel, and relevant signed webhook events. Live Mode keys are rejected. Test Mode does not move real money.
+
+Live Test Mode verification status for this repository is **`NOT_RUN_CREDENTIALS_UNAVAILABLE`**; zero live Payment Links were created during verification. The optional read-only smoke is separate from CI:
 
 ```bash
 npm run smoke:test-mode:optional
 ```
 
-Without the three optional Test Mode read credentials it exits successfully
-with the machine-readable reason `MISSING_OPTIONAL_TEST_MODE_CREDENTIALS`. With
-credentials it performs one fixed payment fetch only; it rejects Live Mode keys
-and never creates or cancels a Payment Link.
+Without private credentials it exits safely with `MISSING_OPTIONAL_TEST_MODE_CREDENTIALS`. Do not enable Test Mode writes unless you have deliberately configured a sandbox check and accepted the local three-attempt link budget. Full private configuration is in [Setup and operations](docs/SETUP_AND_OPERATIONS.md#optional-razorpay-test-mode).
 
-Prototype limitations remain unchanged: this repository has no deployment rate
-limiting, secret-rotation service, multi-node coordination, distributed
-transaction, or automatic repair/replay. If a first-seen event is interrupted
-after its durable claim, or a provider write succeeds before local evidence is
-complete, RecoverAI fails closed and requires operator repair rather than
-repeating a financial operation automatically.
+## Security and reliability
 
-## Current product surface
+- Exact raw request bytes are verified with HMAC-SHA256 before parsing.
+- `x-razorpay-event-id` is claimed durably so concurrent duplicate deliveries converge.
+- Fresh payment state, exact money identity, link state, and case version are rechecked before action.
+- AI can rank only allowlisted actions; deterministic policy owns approval.
+- Stable action identities and database constraints prevent repeated local execution.
+- Late authorization/capture stops recovery and cancels only an eligible unpaid link.
+- Provider timeout or uncertain write outcome fails closed with no automatic retry.
+- Audit is tamper-evident, not immutable; the local anchor can be rewritten by an administrator with full database control.
+- Raw bodies, credentials, customer contact fields, prompts, stack traces, hidden outcomes, and Test Mode short URLs are excluded from dashboard read models.
 
-- Responsive RecoverAI application shell
-- Static Overview with synthetic metrics and recent activity
-- Baseline vs RecoverAI **simulated** recovery comparison
-- Synthetic failure-class distribution
-- Clear Demo Mode, synthetic-data, and non-production indicators
-- Credential-free deterministic mock Razorpay capability adapter
-- Idempotent, policy-gated simulated Payment Link execution with audited safe failures
-- Interactive Cases workspace with one complete persisted recovery flow
-- Recovered terminal stopping and an exact 10× money-integrity safety proof
-- Dashboard-safe read models with no customer hash, public link URL, secrets, raw payload, or audit hashes
-- Separate raw-body-verified Razorpay-style webhook route with durable sequential and concurrent event deduplication
-- Privacy-minimized first-seen webhook audit and current-state reconciliation effects with safe deterministic HTTP responses
-- Separate webhook-evidence and provider-reconciled histories, monotonic success authority, and late-success stopping
-- Versioned seeded development data and a locked 100-payment/125-delivery held-out Digital Twin
-- Evaluator-only hidden simulated outcomes with strict scorer leakage protection
-- Restrained placeholders for later milestone routes
-- Reusable card, badge, table, layout, color, and chart foundations
+Read the concise [security model and limitations](docs/SECURITY_AND_LIMITATIONS.md).
 
-Static display fixtures live in `src/lib/fixtures/`. They are intentionally separate from future domain contracts and financial workflow logic.
+## Known limitations
 
-## Domain-contract foundation
+- Handcrafted synthetic outcomes do not prove production uplift, causality, accuracy, or latency.
+- The default AI scorer is deterministic mock logic, not a trained production model.
+- The live Razorpay Test Mode flow was not run because credentials were unavailable.
+- No deployment rate limiting, secret rotation, multi-node coordination, distributed transaction, or automatic repair of uncertain external operations exists.
+- SQLite is suitable for this local prototype, not multi-node production operation.
+- No production authentication/authorization, real customer messaging, or real-money behavior exists.
+- No arbitrary failed-payment retry, payment capture, refund, subscription, Route, Vulcan, or checkout-abandonment integration exists.
 
-Framework-independent Zod contracts live in `src/domain/`. Runtime schemas are the source of truth and TypeScript types are inferred from them.
+## Repository and document map
 
-The domain layer currently defines:
+- [Architecture](docs/ARCHITECTURE.md)
+- [Setup and operations](docs/SETUP_AND_OPERATIONS.md)
+- [Security and limitations](docs/SECURITY_AND_LIMITATIONS.md)
+- [Buildathon application copy](docs/submission/APPLICATION.md)
+- [Five-minute demo script](docs/submission/DEMO_SCRIPT.md)
+- [Judge Q&A](docs/submission/JUDGE_QA.md)
+- [Submission checklist](docs/submission/SUBMISSION_CHECKLIST.md)
+- [Golden evaluation](docs/evaluation/GOLDEN_REPORT.md)
+- [Verification matrix](docs/VERIFICATION_MATRIX.md)
+- [Product source of truth](docs/RECOVERAI_SPEC.md)
+- [Architecture decisions](docs/DECISIONS.md)
+- [Implementation roadmap](docs/ROADMAP.md)
 
-- Exactly six recovery actions and ten case states
-- Branded synthetic-compatible identifiers and canonical UTC timestamps
-- Integer currency-subunit money contracts
-- Strict normalized payment, event, diagnosis, AI, policy, audit, and simulated evaluation contracts
-- A deliberately separate Razorpay-style external payload boundary
-- Passive signature-verification and duplicate-processing result shapes
+## Official Razorpay references
 
-The domain layer now also defines trusted payment-satisfaction context for deterministic lifecycle and diagnosis safety. The passive scorer, policy firewall, audit hash chain, mock recovery executor, persisted orchestration, first vertical-slice UI, secure public webhook ingestion, provider-independent current-state reconciliation, and held-out Digital Twin dataset are implemented. Baseline-versus-RecoverAI evaluation metrics and the complete dashboard remain deferred to their approved milestones.
+- [Validate and test webhooks](https://razorpay.com/docs/webhooks/validate-test/) — raw-body HMAC, signature header, event-ID deduplication, and out-of-order delivery guidance.
+- [Payments webhook events](https://razorpay.com/docs/webhooks/payments/) and [Payment Links webhook events](https://razorpay.com/docs/webhooks/payment-links/) — supported event payloads.
+- [Fetch payment by ID](https://razorpay.com/docs/api/payments/fetch-with-id/) and [fetch payment downtimes](https://razorpay.com/docs/api/payments/downtime/fetch-all/).
+- [Create](https://razorpay.com/docs/api/payments/payment-links/create-standard/), [fetch](https://razorpay.com/docs/api/payments/payment-links/fetch-id-standard/), and [cancel](https://razorpay.com/docs/api/payments/payment-links/cancel-standard/) a Standard Payment Link.
+- [Payments API scope](https://razorpay.com/docs/api/payments/) — the API is not represented here as an arbitrary failed-payment recollection mechanism.
 
-## Canonical project documents
+## License status
 
-- Product source of truth: `docs/RECOVERAI_SPEC.md`
-- Ordered milestones and status: `docs/ROADMAP.md`
-- Accepted decisions: `docs/DECISIONS.md`
-- Repository working rules: `AGENTS.md`
-
-Development must follow the currently approved milestone and preserve the locked MVP scope and safety boundaries.
+No license has been selected. This repository must not be described as MIT, Apache-licensed, or open source until the owner explicitly chooses and adds a license. The decision remains a user-supplied release item in the [submission checklist](docs/submission/SUBMISSION_CHECKLIST.md).

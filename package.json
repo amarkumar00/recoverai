@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:hardening": "vitest run src/adapters/razorpay/__tests__/adapter-contract-parity.test.ts src/audit/__tests__/sqlite-chain.integration.test.ts src/lib/db/migration-consistency.test.ts src/recovery/__tests__/action-executor.integration.test.ts src/webhooks/__tests__/http-handler.integration.test.ts src/webhooks/__tests__/ingestion.integration.test.ts",
+    "evaluation:check": "vitest run src/evaluation",
     "integrity:check": "vitest run src/digital-twin/__tests__/generator.test.ts src/digital-twin/__tests__/leakage-boundary.test.ts src/evaluation/__tests__/golden-report.test.ts src/dashboard/__tests__/dashboard.test.tsx",
     "db:check": "vitest run src/lib/db/migration-consistency.test.ts",
     "db:migrate": "node scripts/migrate-db.mjs",
@@ -19,9 +20,10 @@
     "hygiene:check": "node scripts/repository-hygiene.mjs",
     "smoke:production": "node scripts/production-smoke.mjs",
     "smoke:test-mode:optional": "node scripts/optional-test-mode-smoke.mjs",
+    "docs:check": "node scripts/documentation-check.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run db:check && npm run integrity:check && npm run test && npm run build && npm run audit:dependencies && npm run hygiene:check && npm run smoke:production"
+    "check": "npm run docs:check && npm run format:check && npm run lint && npm run typecheck && npm run db:check && npm run integrity:check && npm run test && npm run build && npm run audit:dependencies && npm run hygiene:check && npm run smoke:production"
   },
   "dependencies": {
     "better-sqlite3": "13.0.3",
