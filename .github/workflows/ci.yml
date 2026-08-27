@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 20
     env:
       APP_MODE: demo
-      DATABASE_PATH: ${{ runner.temp }}/recoverai-ci.db
+      DATABASE_PATH: /tmp/recoverai-ci.db
       CI: "true"
     steps:
       - name: Check out repository

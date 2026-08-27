@@ -2,10 +2,10 @@
 
 ## Progress
 
-- **Current milestone:** Milestone 18 — Final Browser Verification and Release (Phase A in progress)
+- **Current milestone:** Milestone 18 — Final Browser Verification and Release (Phase B in progress)
 - **Last completed milestone:** Milestone 17 — Documentation and Submission Package
 - **Next proposed milestone:** None — this is the final milestone
-- **Known blockers:** None
+- **Known blockers:** Final completion still requires owner-supplied team name, license decision, pitch/video URL, and Buildathon application URL or ID.
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
 Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, `BLOCKED`.
