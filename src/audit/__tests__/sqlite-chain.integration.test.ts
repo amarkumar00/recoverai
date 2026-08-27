@@ -334,6 +334,35 @@ describe("atomic SQLite audit append", () => {
     }
   });
 
+  it("fails safely without a partial append when SQLite remains locked", () => {
+    const opened = openDatabase();
+    const competing = createLocalDatabase(opened.path);
+    try {
+      competing.client.pragma("busy_timeout = 25");
+      opened.database.client.exec("BEGIN IMMEDIATE");
+
+      expect(createSqliteAuditChain(competing).append(command(1))).toEqual({
+        status: "CHAIN_CORRUPT",
+      });
+
+      opened.database.client.exec("ROLLBACK");
+      expect(opened.chain.verify()).toMatchObject({
+        status: "VALID",
+        checkpoint: { entryCount: 0 },
+      });
+      expect(
+        opened.database.client
+          .prepare("SELECT count(*) AS count FROM audit_entries")
+          .get(),
+      ).toEqual({ count: 0 });
+    } finally {
+      if (opened.database.client.inTransaction)
+        opened.database.client.exec("ROLLBACK");
+      competing.client.close();
+      opened.database.client.close();
+    }
+  });
+
   it("serializes truly concurrent process writers without corrupting the chain", async () => {
     const opened = openDatabase();
     try {

@@ -2,9 +2,9 @@
 
 ## Progress
 
-- **Current milestone:** None — awaiting approval to begin Milestone 16
-- **Last completed milestone:** Milestone 15 — Optional Razorpay Test Mode Adapter
-- **Next proposed milestone:** Milestone 16 — Comprehensive Test and Reliability Hardening
+- **Current milestone:** None — awaiting approval to begin Milestone 17
+- **Last completed milestone:** Milestone 16 — Comprehensive Test and Reliability Hardening
+- **Next proposed milestone:** Milestone 17 — Documentation and Submission Package
 - **Known blockers:** None
 - **Important decisions:** Track 03 RecoverAI scope is locked; mock mode is credential-free and deterministic; Razorpay Test Mode is optional until local stability; every synthetic financial result must be labelled simulated.
 
@@ -228,7 +228,7 @@ Roadmap status must change only after implementation and verification genuinely 
 
 ## Milestone 16 — Comprehensive Test and Reliability Hardening
 
-- **Status:** `NOT_STARTED`
+- **Status:** `COMPLETED`
 - **Outcome:** Complete unit, integration, adversarial, and end-to-end protection for financial safety rules.
 - **Dependencies:** Milestones 1–15; external credentials remain optional.
 - **Acceptance criteria:**

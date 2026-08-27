@@ -333,4 +333,35 @@ describe("secure webhook ingestion", () => {
       environment.database.client.close();
     }
   });
+
+  it("does not automatically replay downstream processing after a first-seen interruption", async () => {
+    const processor = {
+      calls: 0,
+      process() {
+        this.calls += 1;
+        throw new Error("injected downstream interruption");
+      },
+    };
+    const environment = setup(processor);
+    try {
+      expect(await ingest(environment.ingestor)).toEqual({
+        status: "FAILED_SAFE",
+      });
+      expect(
+        await ingest(environment.ingestor, {
+          receivedAt: "2026-08-26T09:00:02.000Z",
+        }),
+      ).toMatchObject({ status: "DUPLICATE" });
+      expect(processor.calls).toBe(1);
+      expect(materialCounts(environment.database)).toEqual({
+        events: 1,
+        cases: 0,
+        actions: 0,
+        links: 0,
+        audits: 0,
+      });
+    } finally {
+      environment.database.client.close();
+    }
+  });
 });

@@ -753,6 +753,48 @@ describe("idempotent audited recovery executor", () => {
     }
   });
 
+  it("fails closed when provider creation succeeds but local link persistence fails", async () => {
+    const env = setup();
+    try {
+      env.database.client.exec(
+        "CREATE TRIGGER reject_link_insert BEFORE INSERT ON payment_links BEGIN SELECT RAISE(ABORT, 'injected local persistence failure'); END",
+      );
+
+      expect(await env.executor.execute(env.command)).toMatchObject({
+        status: "AUDIT_INCOMPLETE",
+        resultCode: "LOCAL_PERSISTENCE_FAILED",
+      });
+      expect(
+        env.repositories.paymentLinks.findByReferenceId(
+          executionIdentifiers(env.command).paymentLinkReferenceId,
+        ),
+      ).toBeNull();
+      expect(
+        env.adapter
+          .getCallLog()
+          .filter(({ operation }) => operation === "CREATE_PAYMENT_LINK"),
+      ).toHaveLength(1);
+      expect(
+        env.audit
+          .readOrdered()
+          .map(({ eventType }) => eventType)
+          .includes("PAYMENT_LINK_PERSISTENCE_INCOMPLETE"),
+      ).toBe(true);
+
+      expect(await env.executor.execute(env.command)).toMatchObject({
+        status: "FAILED_SAFE",
+        resultCode: "LOCAL_PERSISTENCE_FAILED",
+      });
+      expect(
+        env.adapter
+          .getCallLog()
+          .filter(({ operation }) => operation === "CREATE_PAYMENT_LINK"),
+      ).toHaveLength(1);
+    } finally {
+      env.database.client.close();
+    }
+  });
+
   it("never copies unsafe adapter text into persisted audit entries", async () => {
     const env = setup();
     try {

@@ -39,6 +39,22 @@ function setup() {
   return { database, ingestor };
 }
 
+function materialCounts(database: ReturnType<typeof createLocalDatabase>) {
+  const count = (table: string) =>
+    (
+      database.client
+        .prepare(`SELECT count(*) AS count FROM ${table}`)
+        .get() as { count: number }
+    ).count;
+  return {
+    events: count("webhook_events"),
+    cases: count("recovery_cases"),
+    actions: count("recovery_actions"),
+    links: count("payment_links"),
+    audits: count("audit_entries"),
+  };
+}
+
 function request(
   rawBody: Uint8Array,
   headers: HeadersInit = signedHeaders(rawBody),
@@ -126,6 +142,55 @@ describe("Razorpay webhook HTTP boundary", () => {
           resultCode: "SIGNATURE_REJECTED",
         });
       }
+    } finally {
+      environment.database.client.close();
+    }
+  });
+
+  it("rejects declared and actual oversized bodies before ingestion", async () => {
+    const environment = setup();
+    let runtimeLoads = 0;
+    const oversized = Buffer.alloc(256 * 1_024 + 1, "x");
+    try {
+      const declared = await handleRazorpayWebhookRequest(
+        request(rawWebhookBody(), {
+          ...Object.fromEntries(new Headers(signedHeaders(rawWebhookBody()))),
+          "content-length": String(oversized.byteLength),
+        }),
+        {
+          webhookSecret,
+          getIngestor: () => {
+            runtimeLoads += 1;
+            return environment.ingestor;
+          },
+        },
+      );
+      const actual = await handleRazorpayWebhookRequest(
+        request(oversized, signedHeaders(oversized)),
+        {
+          webhookSecret,
+          getIngestor: () => {
+            runtimeLoads += 1;
+            return environment.ingestor;
+          },
+        },
+      );
+
+      for (const response of [declared, actual]) {
+        expect(response.status).toBe(413);
+        expect(await response.json()).toEqual({
+          status: "ERROR_SAFE",
+          resultCode: "PAYLOAD_TOO_LARGE",
+        });
+      }
+      expect(runtimeLoads).toBe(0);
+      expect(materialCounts(environment.database)).toEqual({
+        events: 0,
+        cases: 0,
+        actions: 0,
+        links: 0,
+        audits: 0,
+      });
     } finally {
       environment.database.client.close();
     }

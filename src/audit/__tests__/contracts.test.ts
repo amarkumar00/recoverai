@@ -67,7 +67,7 @@ describe("privacy-safe audit append contract", () => {
     expect(
       auditAppendCommandSchema.safeParse({
         ...validCommand,
-        reason: "Used rzp_test_1234567890secret",
+        reason: "Used rzp_test_fixture",
       }).success,
     ).toBe(false));
   it("rejects bearer credentials", () =>

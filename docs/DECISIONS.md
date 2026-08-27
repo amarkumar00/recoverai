@@ -414,3 +414,17 @@ This log records approved project decisions without adding unapproved implementa
 - **Reason:** Provider events should close the bounded recovery loop while preventing an untrusted webhook payload from inventing a link relationship, money value, duplicate collection, or case recovery.
 - **Status:** ACCEPTED
 - **Date:** 2026-08-27
+
+## ADR-060 — Provider success followed by local persistence failure is outcome-uncertain
+
+- **Decision:** If Payment Link creation returns success but the local link record cannot be persisted, return `AUDIT_INCOMPLETE`, append sanitized uncertainty evidence when possible, mark the claimed action failed-safe, and never automatically repeat the provider operation. A replay returns the persisted failed-safe action rather than issuing another create request.
+- **Reason:** A provider operation and SQLite write cannot be atomic. Treating an unpersisted provider result as ordinary failure could create a second payment instrument, while claiming full success would overstate local evidence.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-27
+
+## ADR-061 — Normal CI is credential-free; optional Test Mode smoke is separate and read-only
+
+- **Decision:** Run deterministic Demo Mode verification in GitHub Actions with no Razorpay or LLM secrets and zero external financial calls. Pin the official checkout/setup actions to reviewed commits. Keep the optional credential-dependent Test Mode smoke outside normal CI, reject Live Mode keys, and limit it to one documented payment read with no Payment Link write.
+- **Reason:** Reliability checks must be reproducible from an untrusted clean checkout and must not consume sandbox link budget or acquire financial write authority. A separate read-only smoke can verify local credentials without weakening or skipping ordinary adapter contract tests.
+- **Status:** ACCEPTED
+- **Date:** 2026-08-27

@@ -709,11 +709,34 @@ export class RecoveryActionExecutor {
       );
       return this.#postCallAuditResult(command, action, auditOkay, finished);
     }
-    const localLink = this.#persistAdapterLink(
-      command,
-      ids.recoveryLinkId,
-      adapterResult.paymentLink,
-    );
+    let localLink: PaymentLinkRecord | null;
+    try {
+      localLink = this.#persistAdapterLink(
+        command,
+        ids.recoveryLinkId,
+        adapterResult.paymentLink,
+      );
+    } catch {
+      const auditOkay = this.#appendAudit(
+        command,
+        ids.auditEntryId("link_persistence_incomplete"),
+        action,
+        "PAYMENT_LINK_PERSISTENCE_INCOMPLETE",
+        "The provider returned a Payment Link result, but local persistence failed and the operation will not be retried automatically.",
+        "LOCAL_PERSISTENCE_FAILED",
+      );
+      const finished = this.#finish(
+        command,
+        action,
+        record,
+        "FAILED_SAFE",
+        "AUDIT_INCOMPLETE",
+        "LOCAL_PERSISTENCE_FAILED",
+        SAFE.AUDIT,
+        ids.auditEntryId("final"),
+      );
+      return this.#postCallAuditResult(command, action, auditOkay, finished);
+    }
     if (localLink === null) {
       return this.#finish(
         command,

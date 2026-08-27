@@ -470,14 +470,20 @@ calculations remain Milestone 13 work.
 
 ## Verification
 
-Run each check independently:
+Normal verification is deterministic, credential-free, and makes zero external
+financial API calls. Run each check independently:
 
 ```bash
+npm run format:check
 npm run lint
 npm run typecheck
-npm test
 npm run db:check
+npm run integrity:check
+npm test
 npm run build
+npm run audit:dependencies
+npm run hygiene:check
+npm run smoke:production
 ```
 
 Or run the complete local verification sequence:
@@ -485,6 +491,40 @@ Or run the complete local verification sequence:
 ```bash
 npm run check
 ```
+
+Milestone 16's focused reliability suite is available as:
+
+```bash
+npm run test:hardening
+```
+
+The requirement-to-test index is recorded in
+[`docs/VERIFICATION_MATRIX.md`](docs/VERIFICATION_MATRIX.md). GitHub Actions
+runs Node.js 22 with `npm ci`, the full credential-free suite, fresh and
+upgraded migration checks, the locked Digital Twin/golden-report integrity
+checks, production build, high-severity production dependency audit, generated
+artifact/privacy checks, and an isolated production HTTP smoke. The smoke uses
+its own temporary SQLite database and verifies all six pages plus safe webhook
+and unsupported-method behavior.
+
+An optional, manually invoked read-only Test Mode connectivity check is kept
+outside normal CI:
+
+```bash
+npm run smoke:test-mode:optional
+```
+
+Without the three optional Test Mode read credentials it exits successfully
+with the machine-readable reason `MISSING_OPTIONAL_TEST_MODE_CREDENTIALS`. With
+credentials it performs one fixed payment fetch only; it rejects Live Mode keys
+and never creates or cancels a Payment Link.
+
+Prototype limitations remain unchanged: this repository has no deployment rate
+limiting, secret-rotation service, multi-node coordination, distributed
+transaction, or automatic repair/replay. If a first-seen event is interrupted
+after its durable claim, or a provider write succeeds before local evidence is
+complete, RecoverAI fails closed and requires operator repair rather than
+repeating a financial operation automatically.
 
 ## Current product surface
 

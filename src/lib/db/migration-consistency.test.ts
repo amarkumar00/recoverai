@@ -1,6 +1,13 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 import { getTableConfig } from "drizzle-orm/sqlite-core";
 import { afterEach, describe, expect, it } from "vitest";
@@ -50,6 +57,32 @@ function createMigratedFileDatabase() {
   return { ...database, path };
 }
 
+function createLegacyMigrationFolder() {
+  const directory = mkdtempSync(join(tmpdir(), "recoverai-legacy-migrations-"));
+  temporaryDirectories.push(directory);
+  const metadataDirectory = join(directory, "meta");
+  mkdirSync(metadataDirectory);
+
+  const currentFolder = resolve(process.cwd(), "drizzle");
+  for (const name of [
+    "0000_durable_recoverai.sql",
+    "0001_tamper_evident_audit_chain.sql",
+    "0002_reconciled_payment_authority.sql",
+    "0003_demo_scenario_state.sql",
+  ]) {
+    cpSync(join(currentFolder, name), join(directory, name));
+  }
+
+  const journal = JSON.parse(
+    readFileSync(join(currentFolder, "meta", "_journal.json"), "utf8"),
+  ) as { entries: unknown[] };
+  writeFileSync(
+    join(metadataDirectory, "_journal.json"),
+    `${JSON.stringify({ ...journal, entries: journal.entries.slice(0, 4) }, null, 2)}\n`,
+  );
+  return directory;
+}
+
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
     rmSync(directory, { recursive: true, force: true });
@@ -74,6 +107,82 @@ describe("committed database migrations", () => {
         .prepare("SELECT count(*) AS count FROM __drizzle_migrations")
         .get() as { count: number };
       expect(migrationCount.count).toBe(5);
+    } finally {
+      database.client.close();
+    }
+  });
+
+  it("upgrades an existing Milestone 14 database without losing persisted rows", () => {
+    const directory = mkdtempSync(join(tmpdir(), "recoverai-upgrade-"));
+    temporaryDirectories.push(directory);
+    const database = createLocalDatabase(join(directory, "upgrade.db"));
+    const legacyMigrations = createLegacyMigrationFolder();
+
+    try {
+      runDatabaseMigrations(database, legacyMigrations);
+      database.client
+        .prepare(
+          "INSERT INTO webhook_events (id, provider_event_id, event_name, occurred_at, received_at, signature_status, processing_status, normalized_event_json, payload_digest, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run(
+          "event_upgrade_001",
+          "provider_upgrade_001",
+          "payment.failed",
+          "2026-08-26T08:00:00.000Z",
+          "2026-08-26T08:00:01.000Z",
+          "VERIFIED",
+          "FIRST_SEEN",
+          "{}",
+          "a".repeat(64),
+          "2026-08-26T08:00:01.000Z",
+        );
+      database.client
+        .prepare(
+          "INSERT INTO payment_snapshots (payment_id, order_id, amount_subunits, currency, status, method, provider_created_at, observed_at, source_event_id, created_at, snapshot_origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run(
+          "pay_upgrade_001",
+          "order_upgrade_001",
+          10_000,
+          "INR",
+          "FAILED",
+          "upi",
+          "2026-08-26T08:00:00.000Z",
+          "2026-08-26T08:00:01.000Z",
+          "event_upgrade_001",
+          "2026-08-26T08:00:01.000Z",
+          "WEBHOOK_EVIDENCE",
+        );
+
+      runDatabaseMigrations(database);
+
+      expect(
+        database.client
+          .prepare(
+            "SELECT provider_event_id AS providerEventId FROM webhook_events WHERE id = ?",
+          )
+          .get("event_upgrade_001"),
+      ).toEqual({ providerEventId: "provider_upgrade_001" });
+      expect(
+        database.client
+          .prepare(
+            "SELECT snapshot_origin AS snapshotOrigin FROM payment_snapshots WHERE source_event_id = ?",
+          )
+          .get("event_upgrade_001"),
+      ).toEqual({ snapshotOrigin: "WEBHOOK_EVIDENCE" });
+      expect(
+        database.client
+          .prepare(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'test_mode_link_attempts'",
+          )
+          .get(),
+      ).toEqual({ name: "test_mode_link_attempts" });
+      expect(database.client.pragma("foreign_key_check")).toEqual([]);
+      expect(
+        database.client
+          .prepare("SELECT count(*) AS count FROM __drizzle_migrations")
+          .get(),
+      ).toEqual({ count: 5 });
     } finally {
       database.client.close();
     }
@@ -105,6 +214,7 @@ describe("committed database migrations", () => {
       for (const index of IMPORTANT_INDEXES) {
         expect(indexNames).toContain(index);
       }
+      expect(database.client.pragma("foreign_key_check")).toEqual([]);
     } finally {
       database.client.close();
     }
