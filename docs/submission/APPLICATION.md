@@ -10,6 +10,24 @@ All copy below is ready to adapt for the Razorpay AI Buildathon application. Any
 
 **Track 03 — AI Revenue Recovery**
 
+## Team and public links
+
+- **Team:** RecoverAI
+- **Team size:** Solo
+- **Builder:** Amar Kumar
+- **Role:** Solo Builder — Full-stack Engineer & Product Designer
+- **Public repository:** [github.com/amarkumar00/recoverai](https://github.com/amarkumar00/recoverai)
+- **Public demo:** [recoverai-production-6446.up.railway.app](https://recoverai-production-6446.up.railway.app/)
+- **Credential-free CI:** [GitHub Actions](https://github.com/amarkumar00/recoverai/actions/workflows/ci.yml)
+- **Pitch/video URL:** Pending owner-supplied recording URL
+- **Buildathon application URL or ID:** Pending owner-supplied application record
+
+## Verified deployment status
+
+The public demo runs in credential-free Demo Mode on Railway with Node.js 22, exactly one application instance, and SQLite at `/data/recoverai.db` on the persistent `/data` volume. No Razorpay credentials are configured. Public verification made zero external financial calls and created zero real or Test Mode Payment Links. The demonstrated Payment Link is deterministic and simulated, has no public URL, and sends no customer message.
+
+Availability currently depends on the Railway Free Trial; no billing details, paid upgrade, or paid Railway feature was used. Live Razorpay Test Mode remains `NOT_RUN_CREDENTIALS_UNAVAILABLE`.
+
 ## One-line pitch
 
 RecoverAI diagnoses failed payments, uses AI to rank only safe recovery options, and lets a deterministic policy firewall execute or stop the workflow—measured against a fair baseline in a locked 100-case synthetic Digital Twin.

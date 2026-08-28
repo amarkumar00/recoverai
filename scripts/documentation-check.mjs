@@ -4,6 +4,7 @@ import { dirname, extname, join, normalize, resolve } from "node:path";
 
 const root = process.cwd();
 const requiredDocuments = [
+  "LICENSE",
   "README.md",
   "docs/ARCHITECTURE.md",
   "docs/SETUP_AND_OPERATIONS.md",
@@ -62,10 +63,57 @@ for (const value of [
   "100% on handcrafted synthetic fixtures",
   "NOT_RUN_CREDENTIALS_UNAVAILABLE",
   "652 tests across 51 files",
-  "No license has been selected",
+  "licensed under the [MIT License](LICENSE)",
+  "https://github.com/amarkumar00/recoverai",
+  "https://recoverai-production-6446.up.railway.app/",
+  "Team:** RecoverAI",
+  "Builder:** Amar Kumar",
+  "Solo Builder — Full-stack Engineer & Product Designer",
+  "Railway Free Trial",
 ]) {
   if (!readme.includes(value))
     failures.push(`README evidence lock missing: ${value}`);
+}
+
+const license = readFileSync(join(root, "LICENSE"), "utf8");
+const expectedMitLicense = `MIT License
+
+Copyright (c) 2026 Amar Kumar
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+`;
+if (license !== expectedMitLicense) {
+  failures.push("LICENSE is not the approved standard MIT License text");
+}
+
+const application = readFileSync(
+  join(root, "docs/submission/APPLICATION.md"),
+  "utf8",
+);
+for (const value of [
+  "Pitch/video URL:** Pending owner-supplied recording URL",
+  "Buildathon application URL or ID:** Pending owner-supplied application record",
+  "NOT_RUN_CREDENTIALS_UNAVAILABLE",
+]) {
+  if (!application.includes(value)) {
+    failures.push(`application release field missing: ${value}`);
+  }
 }
 
 const datasetFingerprint =

@@ -2,8 +2,21 @@
 
 RecoverAI is a Track 03 payment-recovery control plane that diagnoses failed or uncertain payments, ranks only safe candidate actions, and lets deterministic financial policy decide what may execute.
 
+**[Live Demo](https://recoverai-production-6446.up.railway.app/)** · **[Public GitHub Repository](https://github.com/amarkumar00/recoverai)** · **[Passing GitHub Actions CI](https://github.com/amarkumar00/recoverai/actions/workflows/ci.yml)**
+
+- **Team:** RecoverAI
+- **Builder:** Amar Kumar
+- **Role:** Solo Builder — Full-stack Engineer & Product Designer
+- **Track:** Track 03 — AI Revenue Recovery
+
 > [!IMPORTANT]
 > **Prototype and simulated-results disclaimer:** the default application is a credential-free deterministic Demo Mode. Every dashboard rupee amount, recovery result, and held-out outcome is **simulated** synthetic data—not real merchant revenue, production uplift, or causal evidence. The project is not production-ready. Razorpay Live Mode is rejected. Optional Razorpay Test Mode support exists, but live verification was `NOT_RUN_CREDENTIALS_UNAVAILABLE` and zero live Payment Links were created during verification.
+
+## Verified public deployment
+
+The public Railway deployment runs credential-free **Demo Mode** on Node.js 22 with one application instance and SQLite at `/data/recoverai.db` on the persistent `/data` volume. No Razorpay credentials are configured. Phase B4 verification made zero external financial calls and created zero real or Test Mode Payment Links; the primary judge flow uses only a deterministic mock Payment Link with no public URL or customer message.
+
+Public-demo availability currently depends on the Railway Free Trial. No billing details, paid upgrade, or paid Railway feature was used during release verification.
 
 ## The problem
 
@@ -218,6 +231,6 @@ Read the concise [security model and limitations](docs/SECURITY_AND_LIMITATIONS.
 - [Create](https://razorpay.com/docs/api/payments/payment-links/create-standard/), [fetch](https://razorpay.com/docs/api/payments/payment-links/fetch-id-standard/), and [cancel](https://razorpay.com/docs/api/payments/payment-links/cancel-standard/) a Standard Payment Link.
 - [Payments API scope](https://razorpay.com/docs/api/payments/) — the API is not represented here as an arbitrary failed-payment recollection mechanism.
 
-## License status
+## License
 
-No license has been selected. This repository must not be described as MIT, Apache-licensed, or open source until the owner explicitly chooses and adds a license. The decision remains a user-supplied release item in the [submission checklist](docs/submission/SUBMISSION_CHECKLIST.md).
+This repository is licensed under the [MIT License](LICENSE). Copyright © 2026 Amar Kumar.

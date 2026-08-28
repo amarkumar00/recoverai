@@ -1,11 +1,11 @@
 # RecoverAI Submission Checklist
 
-This checklist distinguishes verified repository evidence from release fields that only the project owner can supply. Do not replace `USER_SUPPLIED` with invented URLs, names, or legal terms.
+This checklist distinguishes verified repository evidence from fields that remain owner-supplied. Mark release fields complete only when the owner provides exact values and they are verified; never invent pending URLs or private information.
 
 ## Repository readiness
 
 - [x] Track 03 MVP scope matches `docs/RECOVERAI_SPEC.md`.
-- [x] Judge-first README includes problem, solution, AI boundary, safety, architecture, exact simulated results, setup, verification, Test Mode status, limitations, references, and license status.
+- [x] Judge-first README includes problem, solution, AI boundary, safety, architecture, exact simulated results, setup, verification, Test Mode status, limitations, references, deployment evidence, team information, and license.
 - [x] Focused architecture, setup, security, application, demo, and judge-Q&A documents exist.
 - [x] Default Demo Mode is credential-free, deterministic, seeded, and reproducible.
 - [x] Six dashboard pages and six fixed safety scenarios are documented.
@@ -18,30 +18,31 @@ This checklist distinguishes verified repository evidence from release fields th
 - [x] No machine-specific absolute path appears in public documentation.
 - [x] No secret, credential, private database, dependency directory, build output, or Test Mode short URL is tracked.
 
-## Required links — user-supplied release fields
+## Required links — owner-supplied release fields
 
-- [ ] **Repository URL — `USER_SUPPLIED`:** add the final public repository URL.
-- [ ] **Demo URL — `USER_SUPPLIED`:** add the deployed application URL only after Milestone 18 deployment and browser verification.
-- [ ] **Pitch/video URL — `USER_SUPPLIED`:** add the final five-minute recording URL.
-- [ ] **Buildathon application URL/ID — `USER_SUPPLIED`:** add the submission portal record if provided.
-- [ ] Verify that each supplied URL is public to an incognito reviewer and is not a placeholder.
+- [x] **Repository URL:** <https://github.com/amarkumar00/recoverai>
+- [x] **Demo URL:** <https://recoverai-production-6446.up.railway.app/>
+- [ ] **Pitch/video URL — owner supplied:** add the final five-minute recording URL.
+- [ ] **Buildathon application URL/ID — owner supplied:** add the submission portal record if provided.
+- [x] Repository and demo URLs were verified publicly without login and are not placeholders.
 
-## Team information — user-supplied release fields
+## Team information — owner-supplied release fields
 
-- [ ] **Team name — `USER_SUPPLIED`.**
-- [ ] **Member names — `USER_SUPPLIED`.**
-- [ ] **Member roles — `USER_SUPPLIED`.**
-- [ ] **Contact email/phone required by the submission form — `USER_SUPPLIED`; do not commit private contact data unless intentionally public.**
-- [ ] **Institution/company, city, or profile links if required — `USER_SUPPLIED`.**
-- [ ] Confirm every contributor consents to the published information.
+- [x] **Team name:** RecoverAI.
+- [x] **Member:** Amar Kumar.
+- [x] **Team size:** Solo.
+- [x] **Role:** Solo Builder — Full-stack Engineer & Product Designer.
+- [ ] **Private contact email/phone required by the submission form — owner supplied:** do not commit private contact data unless intentionally public.
+- [ ] **Institution, city, or private profile information if required — owner supplied.**
+- [x] The solo builder explicitly approved the public team information above.
 
-## License decision — user required
+## License decision
 
-- [ ] **Choose a license or decide to keep the repository unlicensed — `USER_SUPPLIED LEGAL DECISION`.**
-- [ ] If a license is chosen, add the exact approved license file and update the README.
-- [ ] Do not describe the repository as MIT, Apache-licensed, or open source until that decision is explicit.
+- [x] **Owner-approved license:** MIT License.
+- [x] Root `LICENSE` contains the standard MIT text and `Copyright (c) 2026 Amar Kumar`.
+- [x] README accurately links to and describes the MIT License.
 
-Current status: **no license has been selected**.
+Current status: **MIT License approved and added**.
 
 ## Test Mode credentials and evidence
 
@@ -92,21 +93,22 @@ The rehearsal above is local Phase A evidence. It is not a hosted recording or p
 - [x] Complete local Phase A browser verification across all six pages at desktop, tablet, and mobile widths.
 - [x] Verify local production runtime logs, console output, keyboard focus, reduced motion, and deterministic scenario resets.
 - [x] Replace the policy-safety screenshot with the corrected deterministic Demo Mode evidence.
-- [ ] Perform final desktop/mobile browser verification on the deployed public URL.
-- [ ] Check deployed console/runtime logs and all six pages.
-- [ ] Confirm signed-webhook and Demo Mode safe failure behavior in the deployment environment.
-- [ ] Add the verified Demo URL to README/submission form.
-- [ ] **Final release commit — `USER/RELEASE-SUPPLIED`:** record the release commit hash after any Milestone 18-only changes.
-- [ ] **Final release tag — `USER/RELEASE-SUPPLIED`:** create only if the owner explicitly approves a tag.
-- [ ] Push/publish only after explicit owner approval.
+- [x] Phase B4 verified desktop, tablet, and 390px mobile layouts on the deployed public URL.
+- [x] Phase B4 checked deployed browser console, Railway runtime logs, and all six judge-facing pages.
+- [x] The unconfigured signed-webhook boundary returned `WEBHOOK_NOT_CONFIGURED` with no downstream effect; Demo Mode scenarios failed safely where expected.
+- [x] Verified public Demo and GitHub URLs are present in README and application copy.
+- [ ] **Phase B5 release-documentation commit:** record the exact commit and final CI run in the Phase B5 completion report.
+- [ ] **Final release tag:** create only after the owner supplies the pitch/video URL and explicitly approves the final tag phase.
+- [x] Phase B5 documentation commit and normal push were explicitly owner-approved; force-push and history rewriting remain prohibited.
 
 ## Final application proofread
 
-- [ ] Project title exactly matches **RecoverAI — Payment Failure Digital Twin & Bounded Recovery Agent**.
-- [ ] Track is **Track 03 — AI Revenue Recovery**.
-- [ ] Every headline metric matches the committed golden report.
-- [ ] Root-cause accuracy says “on handcrafted synthetic fixtures.”
-- [ ] The default scorer is described as a deterministic handcrafted mock/test double.
-- [ ] Live Test Mode is not described as passed.
-- [ ] No real merchant revenue or causal uplift is claimed.
-- [ ] Repository, demo, video, team, and license fields contain user-approved final values.
+- [x] Project title exactly matches **RecoverAI — Payment Failure Digital Twin & Bounded Recovery Agent**.
+- [x] Track is **Track 03 — AI Revenue Recovery**.
+- [x] Every headline metric matches the committed golden report.
+- [x] Root-cause accuracy says “on handcrafted synthetic fixtures.”
+- [x] The default scorer is described as a deterministic handcrafted mock/test double.
+- [x] Live Test Mode is not described as passed.
+- [x] No real merchant revenue or causal uplift is claimed.
+- [x] Repository, demo, team, and license fields contain owner-approved final values.
+- [ ] Pitch/video URL and Buildathon application URL/ID remain pending owner-supplied values.
